@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Esthers Beauty Parlour — Stock &amp; Till</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#2B2722">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Esthers EBP">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{ --gold:#B8924A; --gold-hover:#A17E3A; --gold-money:#9C7A1F; --gold-money-hover:#7F6419; --ink:#2B2722; --ink-soft:#3A352E; --steel:#5B6068; --concrete:#FFFEFA; --panel:#FFFFFF; --line:#E8E1CE; --good:#2E7D46; --bad:#C13B2A; --warn:#B6790A; --radius:3px; }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--concrete);color:var(--ink);font-family:'Inter',sans-serif;}
+  h1,h2,h3{font-family:'Oswald',sans-serif;text-transform:uppercase;letter-spacing:.03em;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  .hazard{height:5px;background:linear-gradient(90deg,var(--gold-hover),var(--gold),var(--gold-hover));}
+  #login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;background:var(--ink);color:#fff;padding:24px;}
+  #login-screen .hazard{position:fixed;top:0;left:0;right:0;}
+  .brand{font-size:30px;font-weight:700;color:var(--gold);letter-spacing:.04em;margin-bottom:2px;text-align:center;max-width:420px;line-height:1.2;}
+  .brand-sub{color:#9aa0a8;font-size:13px;letter-spacing:.2em;margin-bottom:28px;text-transform:uppercase;}
+  .login-card{background:var(--ink-soft);border:1px solid #40444c;border-radius:var(--radius);padding:28px;width:100%;max-width:360px;}
+  .login-card label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#a9adb3;margin:14px 0 6px;}
+  .login-card select, .login-card input{width:100%;padding:10px 12px;border-radius:var(--radius);border:1px solid #4c515a;background:#22252a;color:#fff;font-size:15px;font-family:inherit;}
+  .login-card .hint{color:#767b83;font-size:11.5px;margin-top:4px;}
+  .btn{cursor:pointer;border:none;border-radius:var(--radius);padding:11px 18px;font-family:'Oswald',sans-serif;text-transform:uppercase;letter-spacing:.05em;font-size:14px;font-weight:600;}
+  .btn-yellow{background:var(--gold);color:var(--ink);} .btn-yellow:hover{background:var(--gold-hover);}
+  .btn-money{background:var(--gold-money);color:#fff;} .btn-money:hover{background:var(--gold-money-hover);}
+  .btn-outline{background:transparent;border:1px solid var(--line);color:var(--ink);}
+  .btn-danger{background:var(--bad);color:#fff;}
+  .btn:disabled{opacity:.4;cursor:not-allowed;}
+  #login-btn{width:100%;margin-top:20px;padding:13px;}
+  #login-err{color:#ff8b7a;font-size:13px;margin-top:10px;min-height:16px;}
+  .apicfg{margin-top:22px;font-size:11px;color:#767b83;text-align:center;cursor:pointer;text-decoration:underline;}
+  #app{display:none;min-height:100vh;grid-template-columns:220px 1fr;}
+  #app.show{display:grid;}
+  #sidebar{background:var(--ink);color:#e7e7e7;padding:20px 0;display:flex;flex-direction:column;}
+  #sidebar .brand2{color:var(--gold);font-size:17px;font-weight:700;line-height:1.25;padding:0 20px 6px;}
+  #sidebar .brand2-sub{padding:0 20px;color:#8b8f96;font-size:10px;letter-spacing:.18em;margin-bottom:22px;}
+  #sidebar nav{flex:1;}
+  #sidebar button.navlink{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:none;color:#c7c9cd;padding:12px 20px;font-family:'Oswald',sans-serif;text-transform:uppercase;font-size:13px;letter-spacing:.04em;cursor:pointer;border-left:3px solid transparent;}
+  #sidebar button.navlink:hover{color:#fff;background:#2a2d32;}
+  #sidebar button.navlink.active{color:var(--gold);border-left-color:var(--gold);background:#26282d;}
+  #sidebar button.navlink .cnt{margin-left:auto;background:var(--bad);color:#fff;font-size:10px;border-radius:10px;padding:1px 6px;}
+  #sidebar .who{padding:14px 20px;border-top:1px solid #33363c;font-size:12px;color:#9aa0a8;}
+  #sidebar .who b{color:#fff;display:block;font-size:14px;}
+  #sidebar .who .wid{font-family:'IBM Plex Mono',monospace;color:#767b83;}
+  #sidebar .branchswitch{margin:8px 20px 0;}
+  #sidebar .branchswitch select{width:100%;background:#22252a;color:#fff;border:1px solid var(--gold);font-size:12px;padding:6px 8px;border-radius:3px;}
+  #sidebar .logout{margin:10px 20px 0;font-size:11px;color:#e07a6f;background:none;border:none;cursor:pointer;text-transform:uppercase;letter-spacing:.08em;padding:0;}
+  #main{padding:26px 32px;overflow-x:hidden;}
+  .topbar{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:22px;flex-wrap:wrap;gap:10px;}
+  .topbar h1{font-size:26px;margin:0;}
+  .topbar .branchtag{background:var(--ink);color:var(--gold);font-size:11px;padding:4px 10px;border-radius:2px;letter-spacing:.08em;text-transform:uppercase;}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:26px;}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;position:relative;overflow:hidden;}
+  .card:before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--gold);}
+  .card .label{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--steel);margin-bottom:6px;}
+  .card .val{font-family:'Oswald',sans-serif;font-size:28px;font-weight:600;}
+  .card.bad:before{background:var(--bad);} .card.bad .val{color:var(--bad);}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px;margin-bottom:20px;}
+  .panel h3{font-size:15px;margin:0 0 14px;color:var(--ink-soft);}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;}
+  th{text-align:left;font-family:'Oswald',sans-serif;text-transform:uppercase;font-size:11px;letter-spacing:.05em;color:var(--steel);border-bottom:2px solid var(--ink);padding:8px 10px;}
+  td{padding:9px 10px;border-bottom:1px solid var(--line);}
+  tr:hover td{background:#faf8f2;}
+  .tag{display:inline-block;font-size:10.5px;padding:2px 8px;border-radius:20px;text-transform:uppercase;letter-spacing:.04em;font-weight:600;}
+  .tag.ok{background:#e4f3e8;color:var(--good);} .tag.low{background:#fdeeea;color:var(--bad);} .tag.cat{background:#fdf1d6;color:var(--warn);}
+  .tag.pending{background:#fdf1d6;color:var(--warn);} .tag.confirmed{background:#e4f3e8;color:var(--good);} .tag.rejected{background:#fdeeea;color:var(--bad);}
+  input, select, textarea{font-family:inherit;font-size:14px;padding:8px 10px;border:1px solid #ccc;border-radius:var(--radius);background:#fff;}
+  .field{margin-bottom:12px;}
+  .field label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--steel);margin-bottom:5px;}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .pos-wrap{display:grid;grid-template-columns:1fr 340px;gap:18px;align-items:start;}
+  .pos-search{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
+  .pos-search input{flex:1;min-width:160px;}
+  .catchip{border:1px solid var(--line);background:#fff;padding:6px 12px;border-radius:20px;font-size:12px;cursor:pointer;text-transform:uppercase;letter-spacing:.03em;}
+  .catchip.active{background:var(--ink);color:var(--gold);border-color:var(--ink);}
+  .prod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;max-height:560px;overflow-y:auto;padding-right:4px;}
+  .prod-card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:12px;cursor:pointer;transition:.1s;}
+  .prod-card:hover{border-color:var(--gold);box-shadow:0 2px 8px rgba(0,0,0,.07);}
+  .prod-card .pname{font-weight:600;font-size:13.5px;margin-bottom:4px;min-height:34px;}
+  .prod-card .psku{font-size:10.5px;color:var(--steel);font-family:'IBM Plex Mono',monospace;}
+  .prod-card .pprice{font-family:'Oswald',sans-serif;color:var(--gold-money);font-size:16px;margin-top:6px;}
+  .prod-card .pstock{font-size:11px;margin-top:2px;}
+  .prod-card.nostock{opacity:.45;cursor:not-allowed;}
+  .cart{background:var(--ink);color:#fff;border-radius:var(--radius);padding:16px;position:sticky;top:16px;}
+  .cart h3{color:var(--gold);margin:0 0 10px;}
+  .cart-item{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #33363c;font-size:13px;gap:6px;}
+  .cart-item .ci-name{flex:1;}
+  .cart-item .ci-qty{display:flex;align-items:center;gap:6px;}
+  .cart-item .ci-qty button{background:#33363c;color:#fff;border:none;width:20px;height:20px;border-radius:3px;cursor:pointer;}
+  .cart-total{display:flex;justify-content:space-between;padding:14px 0 6px;font-family:'Oswald',sans-serif;font-size:20px;border-top:2px solid var(--gold-money);margin-top:8px;color:var(--gold-money);}
+  .cart-empty{color:#8b8f96;font-size:13px;padding:20px 0;text-align:center;}
+  .modal-bg{display:none;position:fixed;inset:0;background:rgba(20,20,20,.55);align-items:center;justify-content:center;z-index:50;padding:16px;}
+  .modal-bg.show{display:flex;}
+  .modal{background:#fff;border-radius:var(--radius);padding:24px;width:100%;max-width:440px;max-height:90vh;overflow-y:auto;}
+  .modal h3{margin-top:0;}
+  .modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px;}
+  .receipt{background:#fff;width:300px;padding:18px 16px;font-family:'IBM Plex Mono',monospace;font-size:12px;margin:0 auto;border-left:2px dashed #ccc;border-right:2px dashed #ccc;}
+  .receipt .rhead{text-align:center;margin-bottom:10px;}
+  .receipt .rhead .rb{font-family:'Oswald',sans-serif;font-size:15px;color:var(--ink);letter-spacing:.03em;}
+  .receipt hr{border:none;border-top:1px dashed #999;margin:8px 0;}
+  .receipt .rline{display:flex;justify-content:space-between;}
+  .receipt .rseq{background:var(--gold);color:var(--ink);text-align:center;padding:3px 0;font-weight:600;margin:8px 0;letter-spacing:.05em;}
+  .toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px;}
+  .search-input{min-width:220px;}
+  .empty-state{padding:40px 20px;text-align:center;color:var(--steel);}
+  .badge-role{font-size:10px;padding:2px 7px;border-radius:3px;background:#eee;text-transform:uppercase;letter-spacing:.04em;}
+  .toast{position:fixed;bottom:20px;right:20px;background:var(--ink);color:#fff;padding:12px 18px;border-radius:3px;font-size:13px;z-index:100;border-left:4px solid var(--bad);display:none;max-width:320px;}
+  .conn-badge{position:fixed;top:12px;right:16px;z-index:60;font-size:10.5px;padding:4px 11px;border-radius:20px;font-family:'Oswald',sans-serif;text-transform:uppercase;letter-spacing:.05em;font-weight:600;box-shadow:0 1px 5px rgba(0,0,0,.15);transition:.15s;}
+  .conn-badge.online{background:#e4f3e8;color:var(--good);}
+  .conn-badge.offline{background:#fdeeea;color:var(--bad);}
+  .conn-badge.syncing{background:#fdf1d6;color:var(--warn);}
+  ::-webkit-scrollbar{width:8px;} ::-webkit-scrollbar-thumb{background:#ccc;border-radius:4px;}
+
+  /* ---------- RESPONSIVE ---------- */
+  @media(max-width:840px){
+    #app.show{display:block;}
+    #sidebar{position:sticky;top:0;z-index:20;padding:8px 0;}
+    #sidebar nav{display:flex;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+    #sidebar button.navlink{border-left:none;border-bottom:3px solid transparent;white-space:nowrap;padding:12px 14px;}
+    #sidebar button.navlink.active{border-bottom-color:var(--gold);}
+    #sidebar .who,#sidebar .brand2,#sidebar .brand2-sub,#sidebar .branchswitch{display:none;}
+    #main{padding:18px 16px;}
+    .pos-wrap{grid-template-columns:1fr;}
+    .cart{position:static;}
+    .panel{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+    table{min-width:640px;}
+  }
+  @media(max-width:640px){
+    body{-webkit-text-size-adjust:100%;}
+    .conn-badge{top:auto;bottom:14px;right:14px;font-size:10px;padding:4px 10px;}
+    .brand{font-size:24px;max-width:280px;}
+    .login-card{padding:20px;max-width:100%;}
+    #login-screen{padding:16px;}
+    .topbar{margin-bottom:16px;}
+    .topbar h1{font-size:20px;}
+    .cards{grid-template-columns:1fr 1fr;gap:10px;}
+    .card{padding:13px 14px;}
+    .card .val{font-size:22px;}
+    .prod-grid{grid-template-columns:repeat(auto-fill,minmax(128px,1fr));max-height:none;gap:8px;}
+    .prod-card{padding:10px;}
+    .prod-card .pname{min-height:auto;font-size:12.5px;}
+    .cart-item .ci-qty button{width:28px;height:28px;font-size:15px;}
+    .row2{grid-template-columns:1fr;}
+    .modal-bg{padding:0;align-items:flex-end;}
+    .modal{max-width:100%;width:100%;border-radius:12px 12px 0 0;max-height:92vh;padding:20px 18px calc(20px + env(safe-area-inset-bottom));}
+    .toast{left:14px;right:14px;bottom:70px;max-width:none;}
+    .toolbar{flex-direction:column;align-items:stretch;}
+    .search-input{min-width:0;width:100%;}
+    #sidebar button.navlink{padding:11px 12px;font-size:11.5px;}
+  }
+  @media(min-width:1400px){
+    #main{padding:32px 48px;}
+    .prod-grid{grid-template-columns:repeat(auto-fill,minmax(168px,1fr));}
+  }
+</style>
+</head>
+<body>
+
+<div id="conn-status" class="conn-badge"></div>
+
+<div id="login-screen">
+  <div class="hazard"></div>
+  <div class="brand">ESTHERS BEAUTY PARLOUR</div>
+  <div class="brand-sub">Wigs &amp; Hair · Stock &amp; Till Control</div>
+  <div class="login-card">
+    <label>Work ID</label>
+    <input id="login-workid" placeholder="e.g. EBP-002" autocomplete="off">
+    <label>Full Name</label>
+    <input id="login-name" placeholder="As assigned by your Administrator" autocomplete="off">
+    <div class="hint">Your Work ID and Name are set up by your Administrator or Branch Manager.</div>
+    <div id="login-err"></div>
+    <button class="btn btn-yellow" id="login-btn">Log In</button>
+  </div>
+  <div class="apicfg" id="apicfg-toggle">Server: <span id="apicfg-val" class="mono"></span> (change)</div>
+</div>
+
+<div id="app">
+  <div id="sidebar">
+    <div class="brand2">ESTHERS BEAUTY<br>PARLOUR</div>
+    <div class="brand2-sub">Stock &amp; Till</div>
+    <nav id="navlinks"></nav>
+    <div class="branchswitch" id="branchswitch-wrap" style="display:none;"><select id="branchswitch"></select></div>
+    <div class="who"><b id="who-name"></b><span class="wid" id="who-id"></span><br><span id="who-role"></span> · <span id="who-branch"></span></div>
+    <button class="logout" id="backup-btn" style="display:none;color:var(--gold);margin-top:8px;">⬇ Download Backup</button>
+    <button class="logout" id="logout-btn">Log Out</button>
+  </div>
+  <div id="main"></div>
+</div>
+
+<div class="modal-bg" id="modal-bg"><div class="modal" id="modal-body"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const CATEGORIES = ["Human Hair Wigs","Synthetic Wigs","Lace Frontals","Closures","Bundles","Braiding Hair","Accessories","Oils & Treatments","Installations","Maintenance"];
+const UNITS = ["piece","pack","bundle","set","box","unit","session"];
+
+let API_BASE = localStorage.getItem('ebp_api_base') || window.location.origin;
+document.getElementById('apicfg-val').textContent = API_BASE;
+document.getElementById('apicfg-toggle').onclick = () => {
+  const v = prompt('Backend server URL:', API_BASE);
+  if (v) { API_BASE = v.replace(/\/$/, ''); localStorage.setItem('ebp_api_base', API_BASE); document.getElementById('apicfg-val').textContent = API_BASE; }
+};
+
+let session = null;         // {employeeId, workId, name, role, branchId, isAdmin}
+let CACHE = { branches: [], employees: [], products: [], stock: {}, stockRequests: [], audit: [] };
+let posCart = [];
+let posCategory = "All";
+let currentTab = "dashboard";
+let loginFails = 0;
+let pendingSales = JSON.parse(localStorage.getItem('ebp_pending_sales') || '[]');
+let syncingSales = false;
+
+function money(n){ return "$" + Number(n||0).toFixed(2); }
+function fmtDT(d){ d=new Date(d); return d.toLocaleDateString() + " " + d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}); }
+function toast(msg){ const t = document.getElementById('toast'); t.textContent = msg; t.style.display='block'; clearTimeout(t._h); t._h = setTimeout(()=> t.style.display='none', 3500); }
+
+/* ---------------- OFFLINE SUPPORT ---------------- */
+function savePendingSales(){ localStorage.setItem('ebp_pending_sales', JSON.stringify(pendingSales)); }
+function saveOfflineCache(){ try { localStorage.setItem('ebp_offline_cache', JSON.stringify({ session, CACHE, savedAt: Date.now() })); } catch(e){} }
+function loadOfflineCache(){
+  try {
+    const raw = localStorage.getItem('ebp_offline_cache');
+    if (!raw) return false;
+    const d = JSON.parse(raw);
+    if (!d.CACHE) return false;
+    CACHE = d.CACHE;
+    return true;
+  } catch(e){ return false; }
+}
+function setConnBadge(state, text){
+  const el = document.getElementById('conn-status'); if(!el) return;
+  el.className = 'conn-badge ' + state;
+  el.textContent = text;
+}
+function updateConnStatus(){
+  const online = navigator.onLine;
+  const pend = pendingSales.length;
+  if (!online) setConnBadge('offline', pend ? `Offline · ${pend} pending sale${pend>1?'s':''}` : 'Offline — using saved data');
+  else if (pend) setConnBadge('syncing', `Syncing ${pend} sale${pend>1?'s':''}…`);
+  else setConnBadge('online', 'Online');
+}
+function queueOfflineSale(items){
+  const total = items.reduce((a,it)=>a + it.price*it.qty, 0);
+  const seq = 'OFFLINE-' + String(pendingSales.length+1).padStart(4,'0');
+  const saleRecord = { localId:'off_'+Math.random().toString(36).slice(2,10), branchId: session.branchId, employeeId: session.employeeId, items, total, timestamp: Date.now(), seq };
+  pendingSales.push(saleRecord); savePendingSales();
+  items.forEach(it=>{ const p = CACHE.products.find(x=>x.id===it.productId); if (p && !p.isService) CACHE.stock[it.productId] = Math.max(0,(CACHE.stock[it.productId]||0) - it.qty); });
+  saveOfflineCache();
+  posCart = [];
+  showReceipt(saleRecord, true);
+  renderCart(); renderProdGrid();
+  updateConnStatus();
+  toast('No connection — sale saved on this device and will sync automatically once you\'re back online.');
+}
+async function syncPendingSales(){
+  if (pendingSales.length===0 || !navigator.onLine || !session || syncingSales) return;
+  syncingSales = true;
+  updateConnStatus();
+  const toSync = [...pendingSales];
+  for (const s of toSync) {
+    try {
+      await api('/api/sales', { method:'POST', body:{ branchId:s.branchId, employeeId:s.employeeId, items:s.items } });
+      pendingSales = pendingSales.filter(p=>p.localId!==s.localId);
+      savePendingSales();
+    } catch(e){ break; } // stop at first failure, keep the rest queued for next attempt
+  }
+  syncingSales = false;
+  try { await refreshCache(); renderNav(); render(); } catch(e){}
+  updateConnStatus();
+  if (pendingSales.length===0 && toSync.length>0) toast('All offline sales have synced.');
+}
+window.addEventListener('online', ()=>{ updateConnStatus(); syncPendingSales(); });
+window.addEventListener('offline', updateConnStatus);
+
+async function api(path, opts) {
+  opts = opts || {};
+  opts.headers = Object.assign({'Content-Type':'application/json'}, opts.headers||{});
+  if (opts.body && typeof opts.body !== 'string') opts.body = JSON.stringify(opts.body);
+  let res;
+  try { res = await fetch(API_BASE + path, opts); }
+  catch(e){ toast('Cannot reach server at ' + API_BASE + '. Check the server URL and that the backend is running.'); throw e; }
+  let data = null;
+  try { data = await res.json(); } catch(e) {}
+  if (!res.ok) { const msg = (data && data.error) || ('Request failed (' + res.status + ')'); toast(msg); throw new Error(msg); }
+  return data;
+}
+
+function empName(id){ const e=CACHE.employees.find(x=>x.id===id); return e?e.name:"—"; }
+function branchName(id){ if(id==='ALL') return 'All Branches'; const b=CACHE.branches.find(x=>x.id===id); return b?b.name:"—"; }
+function pendingCount(){ return CACHE.stockRequests.filter(r=>r.status==='pending').length; }
+
+/* ---------------- LOGIN ---------------- */
+document.getElementById('login-btn').onclick = async () => {
+  const err = document.getElementById('login-err');
+  if (loginFails >= 3) { err.textContent = "Too many failed attempts. Please see your Administrator to confirm your Work ID."; return; }
+  const workId = document.getElementById('login-workid').value.trim();
+  const name = document.getElementById('login-name').value.trim();
+  if (!workId || !name) { err.textContent = "Enter both your Work ID and Name."; return; }
+  try {
+    const { employee } = await api('/api/auth/login', { method:'POST', body:{ workId, name } });
+    loginFails = 0; err.textContent = "";
+    session = { employeeId: employee.id, workId: employee.workId, name: employee.name, role: employee.role,
+                branchId: employee.branchId==='ALL' ? null : employee.branchId, isAdmin: employee.role==='Administrator' };
+    if (session.isAdmin && !session.branchId) { const branches = await api('/api/branches'); session.branchId = branches[0] ? branches[0].id : null; }
+    localStorage.setItem('ebp_session', JSON.stringify(session));
+    await enterApp();
+  } catch(e) {
+    loginFails++;
+    err.textContent = loginFails>=3 ? "Too many failed attempts. Please see your Administrator to confirm your Work ID." : "Work ID and Name don't match our records.";
+  }
+};
+document.getElementById('login-name').addEventListener('keydown', e=>{ if(e.key==='Enter') document.getElementById('login-btn').click(); });
+document.getElementById('login-workid').addEventListener('keydown', e=>{ if(e.key==='Enter') document.getElementById('login-name').focus(); });
+
+/* ---------------- APP SHELL ---------------- */
+const TABS = [
+  {id:'dashboard', label:'Dashboard'}, {id:'pos', label:'Sales Till'}, {id:'inventory', label:'Inventory'},
+  {id:'confirm', label:'Stock Confirmations'}, {id:'employees', label:'Employees'}, {id:'branches', label:'Branches'}, {id:'audit', label:'Accountability Log'},
+];
+async function refreshCache(){
+  if (!navigator.onLine) { updateConnStatus(); loadOfflineCache(); return; }
+  try {
+    const [branches, employees, products] = await Promise.all([api('/api/branches'), api('/api/employees'), api('/api/products')]);
+    CACHE.branches = branches; CACHE.employees = employees; CACHE.products = products;
+    const [stock, stockRequests, audit] = await Promise.all([
+      api('/api/stock?branchId=' + encodeURIComponent(session.branchId)),
+      api('/api/stock-requests?' + (session.isAdmin ? 'all=1' : ('branchId=' + encodeURIComponent(session.branchId)))),
+      api('/api/audit?' + (session.isAdmin ? 'all=1' : ('branchId=' + encodeURIComponent(session.branchId)))),
+    ]);
+    CACHE.stock = stock; CACHE.stockRequests = stockRequests; CACHE.audit = audit;
+    saveOfflineCache();
+    updateConnStatus();
+    if (pendingSales.length) syncPendingSales();
+  } catch(e) {
+    updateConnStatus();
+    if (!loadOfflineCache()) throw e;
+  }
+}
+async function enterApp(){
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app').classList.add('show');
+  try { await refreshCache(); }
+  catch(e){ toast('Could not reach the server and no saved data is available on this device yet. Connect once to load your data offline-ready.'); }
+  document.getElementById('who-name').textContent = session.name;
+  document.getElementById('who-id').textContent = session.workId;
+  document.getElementById('who-role').textContent = session.role;
+  document.getElementById('who-branch').textContent = branchName(session.branchId);
+  const swWrap = document.getElementById('branchswitch-wrap');
+  if (session.isAdmin) {
+    swWrap.style.display = 'block';
+    const sw = document.getElementById('branchswitch');
+    sw.innerHTML = CACHE.branches.map(b=>`<option value="${b.id}" ${b.id===session.branchId?'selected':''}>${b.name}</option>`).join('');
+    sw.onchange = async () => { session.branchId = sw.value; localStorage.setItem('ebp_session', JSON.stringify(session)); document.getElementById('who-branch').textContent = branchName(session.branchId); await refreshCache(); render(); };
+  } else { swWrap.style.display = 'none'; }
+  const backupBtn = document.getElementById('backup-btn');
+  if (session.isAdmin) {
+    backupBtn.style.display = 'block';
+    backupBtn.onclick = () => {
+      if (!navigator.onLine) { toast('You need a connection to download a backup.'); return; }
+      window.location.href = API_BASE + '/api/admin/backup?employeeId=' + encodeURIComponent(session.employeeId) + '&branchId=' + encodeURIComponent(session.branchId);
+    };
+  } else { backupBtn.style.display = 'none'; }
+  renderNav(); currentTab = 'dashboard'; render();
+}
+function renderNav(){
+  document.getElementById('navlinks').innerHTML = TABS.map(t=>{
+    const cnt = t.id==='confirm' ? pendingCount() : 0;
+    return `<button class="navlink" data-tab="${t.id}">${t.label}${cnt?`<span class="cnt">${cnt}</span>`:''}</button>`;
+  }).join('');
+  document.querySelectorAll('.navlink').forEach(b=> b.onclick = async ()=>{ currentTab=b.dataset.tab; await refreshCache(); render(); });
+}
+document.getElementById('logout-btn').onclick = async () => {
+  try { await api('/api/auth/logout', { method:'POST', body:{ employeeId: session.employeeId, branchId: session.branchId } }); } catch(e){}
+  session = null; posCart = []; localStorage.removeItem('ebp_session');
+  document.getElementById('app').classList.remove('show');
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('login-workid').value=''; document.getElementById('login-name').value=''; document.getElementById('login-err').textContent='';
+};
+function render(){
+  renderNav();
+  document.querySelectorAll('.navlink').forEach(b=> b.classList.toggle('active', b.dataset.tab===currentTab));
+  const main = document.getElementById('main');
+  if(currentTab==='dashboard') main.innerHTML = renderDashboard();
+  else if(currentTab==='pos') { main.innerHTML = renderPOS(); bindPOS(); }
+  else if(currentTab==='inventory') { main.innerHTML = renderInventory(); bindInventory(); }
+  else if(currentTab==='confirm') { main.innerHTML = renderConfirm(); bindConfirm(); }
+  else if(currentTab==='employees') { main.innerHTML = renderEmployees(); bindEmployees(); }
+  else if(currentTab==='branches') { main.innerHTML = renderBranches(); bindBranches(); }
+  else if(currentTab==='audit') main.innerHTML = renderAudit();
+}
+
+/* ---------------- DASHBOARD ---------------- */
+function renderDashboard(){
+  const bId = session.branchId;
+  const stock = CACHE.stock || {};
+  let stockValue = 0, lowCount = 0;
+  CACHE.products.forEach(p=>{ if(p.isService) return; const q=stock[p.id]||0; stockValue += q*p.cost; if(q<=p.reorderLevel) lowCount++; });
+  const pending = pendingCount();
+  const recentAudit = CACHE.audit.slice(0,8);
+  const lowItems = CACHE.products.filter(p=> !p.isService && (stock[p.id]||0) <= p.reorderLevel);
+  return `
+  <div class="topbar"><h1>Dashboard</h1><span class="branchtag">${branchName(bId)}</span></div>
+  <div class="cards">
+    <div class="card"><div class="label">Stock Value (cost)</div><div class="val">${money(stockValue)}</div></div>
+    <div class="card ${lowCount?'bad':''}"><div class="label">Low Stock Items</div><div class="val">${lowCount}</div></div>
+    <div class="card ${pending?'bad':''}"><div class="label">Pending Stock Confirmations</div><div class="val">${pending}</div></div>
+  </div>
+  <div class="pos-wrap" style="grid-template-columns:1.3fr 1fr;">
+    <div class="panel"><h3>Recent Accountability Log</h3>
+      <table><thead><tr><th>Time</th><th>Employee</th><th>Action</th><th>Details</th></tr></thead>
+      <tbody>${recentAudit.map(a=>`<tr><td>${fmtDT(a.timestamp)}</td><td>${empName(a.employeeId)}</td><td>${a.action}</td><td>${a.details}</td></tr>`).join('') || '<tr><td colspan="4" class="empty-state">No activity yet.</td></tr>'}</tbody></table>
+    </div>
+    <div class="panel"><h3>Reorder List — ${branchName(bId)}</h3>
+      <table><thead><tr><th>Item</th><th>Qty</th><th>Reorder At</th></tr></thead>
+      <tbody>${lowItems.map(p=>`<tr><td>${p.name}</td><td>${stock[p.id]||0} ${p.unit}</td><td>${p.reorderLevel} ${p.unit}</td></tr>`).join('') || '<tr><td colspan="3" class="empty-state">All stocked up.</td></tr>'}</tbody></table>
+    </div>
+  </div>`;
+}
+
+/* ---------------- POS ---------------- */
+function renderPOS(){
+  return `
+  <div class="topbar"><h1>Sales Till</h1><span class="branchtag">${branchName(session.branchId)}</span></div>
+  <div class="pos-wrap">
+    <div>
+      <div class="pos-search">
+        <input id="pos-search-input" class="search-input" placeholder="Search product or SKU…">
+        <div class="catchip ${posCategory==='All'?'active':''}" data-cat="All">All</div>
+        ${CATEGORIES.map(c=>`<div class="catchip ${posCategory===c?'active':''}" data-cat="${c}">${c}</div>`).join('')}
+      </div>
+      <div class="prod-grid" id="prod-grid"></div>
+    </div>
+    <div class="cart">
+      <h3>Current Sale</h3>
+      <div id="cart-items"></div>
+      <div class="cart-total"><span>Total</span><span id="cart-total-val">${money(0)}</span></div>
+      <button class="btn btn-money" id="checkout-btn" style="width:100%;margin-top:12px;">Checkout &amp; Print Receipt</button>
+      <button class="btn btn-outline" id="clear-cart-btn" style="width:100%;margin-top:8px;background:transparent;border-color:#4c515a;color:#fff;">Clear Sale</button>
+    </div>
+  </div>`;
+}
+function posFilteredProducts(){
+  const q = (document.getElementById('pos-search-input')?.value || '').toLowerCase();
+  return CACHE.products.filter(p=>{
+    if(posCategory!=='All' && p.category!==posCategory) return false;
+    if(q && !(p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q))) return false;
+    return true;
+  });
+}
+function renderProdGrid(){
+  const stock = CACHE.stock || {};
+  const grid = document.getElementById('prod-grid'); if(!grid) return;
+  grid.innerHTML = posFilteredProducts().map(p=>{
+    const q = stock[p.id]||0;
+    const noStock = !p.isService && q<=0;
+    const stockLine = p.isService
+      ? `<div class="pstock" style="color:var(--gold);">Service</div>`
+      : `<div class="pstock" style="color:${q<=p.reorderLevel?'#C13B2A':'#5B6068'}">${q} ${p.unit} in stock</div>`;
+    return `<div class="prod-card ${noStock?'nostock':''}" data-id="${p.id}">
+      <div class="pname">${p.name}</div><div class="psku">${p.sku}</div>
+      <div class="pprice">${money(p.price)} <span style="font-size:11px;color:#8b8f96;">/ ${p.unit}</span></div>
+      ${stockLine}
+    </div>`;
+  }).join('') || '<div class="empty-state">No products match.</div>';
+  grid.querySelectorAll('.prod-card').forEach(el=> el.onclick = ()=>{ if(!el.classList.contains('nostock')) addToCart(el.dataset.id); });
+}
+function addToCart(prodId){
+  const stock = CACHE.stock || {};
+  const p = CACHE.products.find(x=>x.id===prodId);
+  const existing = posCart.find(c=>c.productId===prodId);
+  const inCart = existing ? existing.qty : 0;
+  if (!p.isService && inCart + 1 > (stock[prodId]||0)) return;
+  if (existing) existing.qty += 1; else posCart.push({productId:prodId, qty:1, price:p.price});
+  renderCart();
+}
+function renderCart(){
+  const stock = CACHE.stock || {};
+  const box = document.getElementById('cart-items'); if(!box) return;
+  box.innerHTML = posCart.length===0 ? '<div class="cart-empty">Cart is empty — tap a product to add it.</div>' :
+    posCart.map(c=>{
+      const p = CACHE.products.find(x=>x.id===c.productId);
+      return `<div class="cart-item"><div class="ci-name">${p.name}<br><span style="color:#8b8f96">${money(c.price)} × ${c.qty} ${p.unit}</span></div>
+        <div class="ci-qty"><button data-act="dec" data-id="${c.productId}">−</button><span>${c.qty}</span><button data-act="inc" data-id="${c.productId}">+</button><button data-act="rm" data-id="${c.productId}" style="background:#5c1f1a;">×</button></div></div>`;
+    }).join('');
+  document.getElementById('cart-total-val').textContent = money(posCart.reduce((a,c)=>a+c.price*c.qty,0));
+  box.querySelectorAll('button').forEach(btn=> btn.onclick = ()=>{
+    const id = btn.dataset.id, act = btn.dataset.act, item = posCart.find(c=>c.productId===id);
+    const p = CACHE.products.find(x=>x.id===id);
+    if(act==='inc'){ if(p.isService || item.qty+1 <= (stock[id]||0)) item.qty+=1; }
+    else if(act==='dec'){ item.qty-=1; if(item.qty<=0) posCart = posCart.filter(c=>c.productId!==id); }
+    else if(act==='rm'){ posCart = posCart.filter(c=>c.productId!==id); }
+    renderCart(); renderProdGrid();
+  });
+}
+function bindPOS(){
+  renderProdGrid(); renderCart();
+  document.getElementById('pos-search-input').oninput = renderProdGrid;
+  document.querySelectorAll('.catchip').forEach(c=> c.onclick = ()=>{ posCategory=c.dataset.cat; document.getElementById('main').innerHTML = renderPOS(); bindPOS(); });
+  document.getElementById('clear-cart-btn').onclick = ()=>{ posCart=[]; renderCart(); renderProdGrid(); };
+  document.getElementById('checkout-btn').onclick = doCheckout;
+}
+async function doCheckout(){
+  if (posCart.length===0) return;
+  const items = posCart.map(c=>({productId:c.productId, qty:c.qty, price:c.price}));
+  if (!navigator.onLine) { queueOfflineSale(items); return; }
+  try {
+    const sale = await api('/api/sales', { method:'POST', body:{ branchId: session.branchId, employeeId: session.employeeId, items } });
+    posCart = []; await refreshCache(); showReceipt(sale); renderCart(); renderProdGrid(); renderNav();
+  } catch(e){
+    if (e instanceof TypeError) queueOfflineSale(items); // network unreachable, not a server-side rejection
+  }
+}
+function showReceipt(sale, offline){
+  const items = sale.items.map(c=>{ const p = CACHE.products.find(x=>x.id===c.productId); return `<div class="rline"><span>${p?p.name:c.productId} x${c.qty}${p?p.unit:''}</span><span>${money(c.price*c.qty)}</span></div>`; }).join('');
+  openModal(`<div class="receipt"><div class="rhead"><div class="rb">ESTHERS BEAUTY PARLOUR</div><div>${branchName(session.branchId)}</div></div>
+      <div class="rseq">${sale.seq}</div>
+      ${offline?'<div style="text-align:center;color:var(--bad);font-weight:700;margin:6px 0 2px;letter-spacing:.04em;">OFFLINE — PENDING SYNC</div>':''}
+      <div class="rline"><span>Date</span><span>${fmtDT(sale.timestamp)}</span></div>
+      <div class="rline"><span>Served by</span><span>${session.name}</span></div><hr>${items}<hr>
+      <div class="rline" style="font-weight:700;font-size:14px;color:var(--gold-money);"><span>TOTAL</span><span>${money(sale.total)}</span></div><hr>
+      <div style="text-align:center;color:#888;margin-top:6px;">${offline?'Saved on this device — will sync automatically once online.':'Thank you for shopping with us'}</div></div>
+    <div class="modal-actions"><button class="btn btn-outline" id="close-receipt">Close</button><button class="btn btn-yellow" onclick="window.print()">Print</button></div>`);
+  document.getElementById('close-receipt').onclick = closeModal;
+}
+
+/* ---------------- INVENTORY ---------------- */
+let invSearch = "";
+function renderInventory(){
+  const stock = CACHE.stock || {};
+  const list = CACHE.products.filter(p=> !invSearch || p.name.toLowerCase().includes(invSearch) || p.sku.toLowerCase().includes(invSearch));
+  return `
+  <div class="topbar"><h1>Inventory</h1><span class="branchtag">${branchName(session.branchId)}</span></div>
+  <div class="toolbar"><input id="inv-search" class="search-input" placeholder="Search product or SKU…" value="${invSearch}"><button class="btn btn-yellow" id="add-product-btn">+ Add Product</button></div>
+  <div class="panel"><table><thead><tr><th>SKU</th><th>Product</th><th>Category</th><th>Stock</th><th>Price</th><th>Cost</th><th></th></tr></thead>
+    <tbody>${list.map(p=>{
+      const q = stock[p.id]||0, low = !p.isService && q<=p.reorderLevel;
+      const stockCell = p.isService
+        ? `<span class="tag cat">Service</span>`
+        : `${q} ${p.unit} ${low?'<span class="tag low">Low</span>':'<span class="tag ok">OK</span>'}`;
+      return `<tr><td class="mono">${p.sku}</td><td>${p.name}</td><td><span class="tag cat">${p.category}</span></td>
+        <td>${stockCell}</td>
+        <td>${money(p.price)} /${p.unit}</td><td>${p.isService?'—':money(p.cost)+' /'+p.unit}</td>
+        <td style="white-space:nowrap;">${p.isService?'':`<button class="btn btn-outline" style="padding:5px 9px;font-size:11px;" data-adj="${p.id}">Add / Remove Stock</button>`}
+        <button class="btn btn-outline" style="padding:5px 9px;font-size:11px;" data-edit="${p.id}">Edit</button></td></tr>`;
+    }).join('') || '<tr><td colspan="7" class="empty-state">No products found.</td></tr>'}</tbody></table></div>`;
+}
+function bindInventory(){
+  document.getElementById('inv-search').oninput = (e)=>{ invSearch = e.target.value.toLowerCase(); document.getElementById('main').innerHTML = renderInventory(); bindInventory(); };
+  document.getElementById('add-product-btn').onclick = ()=> openProductModal(null);
+  document.querySelectorAll('[data-edit]').forEach(b=> b.onclick = ()=> openProductModal(b.dataset.edit));
+  document.querySelectorAll('[data-adj]').forEach(b=> b.onclick = ()=> openStockAdjustModal(b.dataset.adj));
+}
+function openProductModal(prodId){
+  const p = prodId ? CACHE.products.find(x=>x.id===prodId) : null;
+  const isSvc = p ? !!p.isService : false;
+  openModal(`<h3>${p?'Edit Product':'Add Product / Service'}</h3>
+    <div class="field"><label><input type="checkbox" id="pf-isservice" ${isSvc?'checked':''} style="width:auto;margin-right:6px;">This is a service (no stock tracking, e.g. installation, maintenance)</label></div>
+    <div class="field"><label>Product / Service Name</label><input id="pf-name" value="${p?p.name:''}"></div>
+    <div class="row2"><div class="field"><label>SKU</label><input id="pf-sku" value="${p?p.sku:''}"></div>
+      <div class="field"><label>Category</label><select id="pf-cat">${CATEGORIES.map(c=>`<option ${p&&p.category===c?'selected':''}>${c}</option>`).join('')}</select></div></div>
+    <div class="row2"><div class="field"><label>Unit</label><select id="pf-unit">${UNITS.map(u=>`<option value="${u}" ${p&&p.unit===u?'selected':''}>${u}</option>`).join('')}</select></div>
+      <div class="field" id="pf-reorder-wrap"><label>Reorder Level</label><input id="pf-reorder" type="number" value="${p?p.reorderLevel:5}"></div></div>
+    <div class="row2"><div class="field"><label>Sell Price (per unit)</label><input id="pf-price" type="number" step="0.01" value="${p?p.price:''}"></div>
+      <div class="field" id="pf-cost-wrap"><label>Cost Price (per unit)</label><input id="pf-cost" type="number" step="0.01" value="${p?p.cost:''}"></div></div>
+    ${!p?`<div class="field" id="pf-openstock-wrap"><label>Opening Stock — ${branchName(session.branchId)}</label><input id="pf-openstock" type="number" value="0"></div>`:''}
+    <div class="modal-actions">${p?`<button class="btn btn-danger" id="pf-delete">Delete</button>`:'<span></span>'}
+      <div><button class="btn btn-outline" id="pf-cancel">Cancel</button><button class="btn btn-yellow" id="pf-save">Save</button></div></div>`);
+  const svcCheckbox = document.getElementById('pf-isservice');
+  const toggleServiceFields = ()=>{
+    const svc = svcCheckbox.checked;
+    ['pf-reorder-wrap','pf-cost-wrap','pf-openstock-wrap'].forEach(id=>{
+      const el = document.getElementById(id); if(el) el.style.display = svc?'none':'';
+    });
+  };
+  svcCheckbox.onchange = toggleServiceFields;
+  toggleServiceFields();
+  document.getElementById('pf-cancel').onclick = closeModal;
+  if (p) document.getElementById('pf-delete').onclick = async ()=>{
+    try { await api('/api/products/' + p.id, { method:'DELETE', body:{ actorId: session.employeeId, branchId: session.branchId } });
+      await refreshCache(); closeModal(); render(); } catch(e){}
+  };
+  document.getElementById('pf-save').onclick = async ()=>{
+    const name = document.getElementById('pf-name').value.trim();
+    const sku = document.getElementById('pf-sku').value.trim();
+    if (!name || !sku) return;
+    const isService = document.getElementById('pf-isservice').checked;
+    const body = { name, sku, category: document.getElementById('pf-cat').value, unit: document.getElementById('pf-unit').value,
+      reorderLevel: Number(document.getElementById('pf-reorder').value)||0, price: Number(document.getElementById('pf-price').value)||0,
+      cost: Number(document.getElementById('pf-cost').value)||0, isService, actorId: session.employeeId, branchId: session.branchId };
+    try {
+      if (p) await api('/api/products/' + p.id, { method:'PUT', body });
+      else await api('/api/products', { method:'POST', body: Object.assign(body, { openingStock: Number(document.getElementById('pf-openstock').value)||0 }) });
+      await refreshCache(); closeModal(); render();
+    } catch(e){}
+  };
+}
+function openStockAdjustModal(prodId){
+  const p = CACHE.products.find(x=>x.id===prodId);
+  const cur = (CACHE.stock||{})[prodId]||0;
+  openModal(`<h3>Submit Stock Entry</h3>
+    <p style="color:#5B6068;font-size:13px;">${p.name} — currently <b>${cur} ${p.unit}</b> at ${branchName(session.branchId)}. This will be held as <b>pending</b> until another employee confirms it.</p>
+    <div class="field"><label>Type</label><select id="adj-type"><option value="add">Add stock (delivery)</option><option value="remove">Remove stock (damage/loss/count)</option></select></div>
+    <div class="field"><label>Quantity (${p.unit})</label><input id="adj-qty" type="number" min="0.01" step="0.01" value="1"></div>
+    <div class="field"><label>Reason / Reference</label><input id="adj-reason" placeholder="e.g. GRN #245, damaged in transit, stock count"></div>
+    <div class="modal-actions"><button class="btn btn-outline" id="adj-cancel">Cancel</button><button class="btn btn-yellow" id="adj-save">Submit for Confirmation</button></div>`);
+  document.getElementById('adj-cancel').onclick = closeModal;
+  document.getElementById('adj-save').onclick = async ()=>{
+    const type = document.getElementById('adj-type').value;
+    const qty = Number(document.getElementById('adj-qty').value)||0;
+    const reason = document.getElementById('adj-reason').value.trim() || '—';
+    if (qty<=0) return;
+    try {
+      await api('/api/stock-requests', { method:'POST', body:{ branchId: session.branchId, productId: prodId, qty, type, reason, actorId: session.employeeId } });
+      await refreshCache(); closeModal(); render();
+    } catch(e){}
+  };
+}
+
+/* ---------------- STOCK CONFIRMATIONS ---------------- */
+function renderConfirm(){
+  const list = CACHE.stockRequests;
+  return `<div class="topbar"><h1>Stock Confirmations</h1><span class="branchtag">${branchName(session.branchId)}</span></div>
+  <p style="color:var(--steel);font-size:13px;margin-top:-10px;">Any employee can submit a stock entry from Inventory. To keep everyone accountable, a <b>different</b> employee must confirm it before stock updates.</p>
+  <div class="panel"><table><thead><tr><th>Submitted</th><th>Product</th><th>Type</th><th>Qty</th><th>Reason</th><th>Requested By</th><th>Status</th><th></th></tr></thead>
+    <tbody>${list.map(r=>{
+      const p = CACHE.products.find(x=>x.id===r.productId);
+      const mine = r.requestedBy === session.employeeId;
+      let actions = '';
+      if (r.status==='pending') {
+        actions = mine
+          ? `<span style="color:#8b8f96;font-size:12px;">Awaiting another employee</span> <button class="btn btn-outline" style="padding:4px 8px;font-size:11px;" data-void="${r.id}">Cancel</button>`
+          : `<button class="btn btn-yellow" style="padding:4px 8px;font-size:11px;" data-confirm="${r.id}">Confirm</button> <button class="btn btn-danger" style="padding:4px 8px;font-size:11px;" data-reject="${r.id}">Reject</button>`;
+      }
+      return `<tr><td>${fmtDT(r.requestedAt)}</td><td>${p?p.name:'—'} <span style="color:#8b8f96;">(${branchName(r.branchId)})</span></td>
+        <td style="text-transform:capitalize;">${r.type}</td><td>${r.qty} ${p?p.unit:''}</td><td>${r.reason}</td><td>${empName(r.requestedBy)}</td>
+        <td><span class="tag ${r.status}">${r.status}</span>${r.confirmedBy?` <div style="font-size:11px;color:#8b8f96;">by ${empName(r.confirmedBy)}</div>`:''}</td><td>${actions}</td></tr>`;
+    }).join('') || '<tr><td colspan="8" class="empty-state">No stock entries yet.</td></tr>'}</tbody></table></div>`;
+}
+function bindConfirm(){
+  document.querySelectorAll('[data-confirm]').forEach(b=> b.onclick = ()=> resolveStockRequest(b.dataset.confirm, 'confirm'));
+  document.querySelectorAll('[data-reject]').forEach(b=> b.onclick = ()=> resolveStockRequest(b.dataset.reject, 'reject'));
+  document.querySelectorAll('[data-void]').forEach(b=> b.onclick = ()=> resolveStockRequest(b.dataset.void, 'reject'));
+}
+async function resolveStockRequest(reqId, action){
+  try { await api(`/api/stock-requests/${reqId}/${action}`, { method:'POST', body:{ actorId: session.employeeId } }); await refreshCache(); render(); } catch(e){}
+}
+
+/* ---------------- EMPLOYEES ---------------- */
+function renderEmployees(){
+  const canManage = session.role === 'Administrator' || session.role === 'Manager';
+  const visible = session.isAdmin ? CACHE.employees : CACHE.employees.filter(e=> e.branchId===session.branchId || e.branchId==='ALL');
+  return `<div class="topbar"><h1>Employees</h1>${canManage?'<button class="btn btn-yellow" id="add-emp-btn">+ Add Employee</button>':''}</div>
+  <div class="panel"><table><thead><tr><th>Work ID</th><th>Name</th><th>Role</th><th>Branch</th>${canManage?'<th></th>':''}</tr></thead>
+    <tbody>${visible.map(e=>`<tr><td class="mono">${e.workId}</td><td>${e.name}</td><td><span class="badge-role">${e.role}</span></td><td>${branchName(e.branchId)}</td>
+      ${canManage?`<td>${(e.id!==session.employeeId && e.role!=='Administrator')?`<button class="btn btn-outline" style="padding:5px 9px;font-size:11px;" data-remove="${e.id}">Remove</button>`:''}</td>`:''}</tr>`).join('')}</tbody></table></div>
+  ${!canManage?'<p style="color:#5B6068;font-size:13px;">Only Administrators and Managers can add or remove employees.</p>':''}
+  ${(canManage && !session.isAdmin)?`<p style="color:#5B6068;font-size:13px;">As a Manager, new employees you add are assigned to ${branchName(session.branchId)}.</p>`:''}`;
+}
+function bindEmployees(){
+  const btn = document.getElementById('add-emp-btn');
+  if (btn) btn.onclick = openEmployeeModal;
+  document.querySelectorAll('[data-remove]').forEach(b=> b.onclick = async ()=>{
+    try { await api('/api/employees/' + b.dataset.remove, { method:'DELETE', body:{ actorId: session.employeeId } }); await refreshCache(); render(); } catch(e){}
+  });
+}
+async function openEmployeeModal(){
+  const { workId: suggested } = await api('/api/employees/next-work-id');
+  const lockBranch = !session.isAdmin;
+  openModal(`<h3>Add Employee</h3>
+    <p style="color:#5B6068;font-size:13px;">This Work ID and Name are what the employee will use to log in — share them securely.</p>
+    <div class="field"><label>Full Name</label><input id="ef-name"></div>
+    <div class="row2"><div class="field"><label>Work ID</label><input id="ef-workid" value="${suggested}"></div>
+      <div class="field"><label>Role</label><select id="ef-role"><option>Cashier</option><option>Stock Clerk</option><option>Manager</option>${session.isAdmin?'<option>Administrator</option>':''}</select></div></div>
+    <div class="field"><label>Branch</label>
+      ${lockBranch ? `<input value="${branchName(session.branchId)}" disabled><input type="hidden" id="ef-branch" value="${session.branchId}">`
+                   : `<select id="ef-branch">${CACHE.branches.map(b=>`<option value="${b.id}">${b.name}</option>`).join('')}</select>`}</div>
+    <div class="modal-actions"><button class="btn btn-outline" id="ef-cancel">Cancel</button><button class="btn btn-yellow" id="ef-save">Add Employee</button></div>`);
+  document.getElementById('ef-cancel').onclick = closeModal;
+  document.getElementById('ef-save').onclick = async ()=>{
+    const name = document.getElementById('ef-name').value.trim();
+    const workId = document.getElementById('ef-workid').value.trim();
+    const role = document.getElementById('ef-role').value;
+    const branchId = document.getElementById('ef-branch').value;
+    if (!name || !workId) return;
+    try { await api('/api/employees', { method:'POST', body:{ name, workId, role, branchId, actorId: session.employeeId } }); await refreshCache(); closeModal(); render(); } catch(e){}
+  };
+}
+
+/* ---------------- BRANCHES ---------------- */
+function renderBranches(){
+  const canManage = session.isAdmin;
+  return `<div class="topbar"><h1>Branches</h1>${canManage?'<button class="btn btn-yellow" id="add-branch-btn">+ Add Branch</button>':''}</div>
+  <div class="panel"><table><thead><tr><th>Branch</th><th>Location</th><th>Employees</th><th>Products Tracked</th></tr></thead>
+    <tbody>${CACHE.branches.map(b=>`<tr><td>${b.name}</td><td>${b.location||'—'}</td><td>${CACHE.employees.filter(e=>e.branchId===b.id).length}</td><td>${CACHE.products.length}</td></tr>`).join('')}</tbody></table></div>
+  ${!canManage?'<p style="color:#5B6068;font-size:13px;">Only the Administrator can add new branches.</p>':''}`;
+}
+function bindBranches(){
+  const btn = document.getElementById('add-branch-btn'); if (!btn) return;
+  btn.onclick = ()=>{
+    openModal(`<h3>Add Branch</h3><div class="field"><label>Branch Name</label><input id="bf-name"></div>
+      <div class="field"><label>Location</label><input id="bf-loc"></div>
+      <div class="modal-actions"><button class="btn btn-outline" id="bf-cancel">Cancel</button><button class="btn btn-yellow" id="bf-save">Add</button></div>`);
+    document.getElementById('bf-cancel').onclick = closeModal;
+    document.getElementById('bf-save').onclick = async ()=>{
+      const name = document.getElementById('bf-name').value.trim();
+      const location = document.getElementById('bf-loc').value.trim();
+      if (!name) return;
+      try { await api('/api/branches', { method:'POST', body:{ name, location, actorId: session.employeeId } }); await refreshCache(); closeModal(); render(); } catch(e){}
+    };
+  };
+}
+
+/* ---------------- AUDIT ---------------- */
+function renderAudit(){
+  return `<div class="topbar"><h1>Accountability Log</h1><span class="branchtag">${branchName(session.branchId)}</span></div>
+  <div class="panel"><table><thead><tr><th>Time</th><th>Branch</th><th>Employee</th><th>Action</th><th>Details</th></tr></thead>
+    <tbody>${CACHE.audit.map(a=>`<tr><td>${fmtDT(a.timestamp)}</td><td>${branchName(a.branchId)}</td><td>${empName(a.employeeId)}</td><td>${a.action}</td><td>${a.details}</td></tr>`).join('') || '<tr><td colspan="5" class="empty-state">No activity recorded yet.</td></tr>'}</tbody></table></div>`;
+}
+
+/* ---------------- MODAL ---------------- */
+function openModal(html){ document.getElementById('modal-body').innerHTML = html; document.getElementById('modal-bg').classList.add('show'); }
+function closeModal(){ document.getElementById('modal-bg').classList.remove('show'); }
+document.getElementById('modal-bg').addEventListener('click', (e)=>{ if(e.target.id==='modal-bg') closeModal(); });
+
+/* ---------------- INIT ---------------- */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(()=>{}); });
+}
+(async function init(){
+  updateConnStatus();
+  const saved = localStorage.getItem('ebp_session');
+  if (saved) {
+    try {
+      session = JSON.parse(saved);
+      await enterApp();
+      return;
+    } catch(e){ session = null; localStorage.removeItem('ebp_session'); }
+  }
+})();
+</script>
+</body>
+</html>

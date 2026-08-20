@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: esthers-beauty-parlour
+    runtime: node
+    plan: starter
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: DB_PATH
+        value: /data/esthers.db
+    disk:
+      name: esthers-data
+      mountPath: /data
+      sizeGB: 1

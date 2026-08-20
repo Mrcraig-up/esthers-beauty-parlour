@@ -1,0 +1,5 @@
+node_modules/
+backend/esthers.db
+backend/esthers.db-shm
+backend/esthers.db-wal
+.DS_Store
