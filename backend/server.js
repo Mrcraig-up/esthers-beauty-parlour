@@ -61,6 +61,17 @@ CREATE TABLE IF NOT EXISTS audit_log(
 CREATE TABLE IF NOT EXISTS counters(
   name TEXT PRIMARY KEY, value INTEGER NOT NULL
 );
+CREATE TABLE IF NOT EXISTS categories(
+  id TEXT PRIMARY KEY, name TEXT UNIQUE NOT NULL
+);
+CREATE TABLE IF NOT EXISTS returns(
+  id TEXT PRIMARY KEY, branch_id TEXT NOT NULL, product_id TEXT NOT NULL,
+  qty REAL NOT NULL, reason TEXT, sale_id TEXT, refund_amount REAL,
+  employee_id TEXT NOT NULL, timestamp INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS settings(
+  key TEXT PRIMARY KEY, value TEXT
+);
 `);
 
 /* ---------------- MIGRATIONS (safe on existing DBs) ---------------- */
@@ -68,6 +79,20 @@ const productCols = db.prepare("PRAGMA table_info(products)").all().map(c => c.n
 if (!productCols.includes('is_service')) {
   db.exec("ALTER TABLE products ADD COLUMN is_service INTEGER NOT NULL DEFAULT 0");
 }
+['color', 'density', 'length'].forEach(col => {
+  if (!productCols.includes(col)) db.exec(`ALTER TABLE products ADD COLUMN ${col} TEXT`);
+});
+const saleCols = db.prepare("PRAGMA table_info(sales)").all().map(c => c.name);
+[
+  ['discount', 'REAL NOT NULL DEFAULT 0'],
+  ['payment_method', "TEXT NOT NULL DEFAULT 'Cash'"],
+  ['amount_received', 'REAL'],
+  ['change_due', 'REAL'],
+  ['currency', "TEXT NOT NULL DEFAULT 'USD'"],
+  ['fx_rate', 'REAL'],
+].forEach(([col, def]) => { if (!saleCols.includes(col)) db.exec(`ALTER TABLE sales ADD COLUMN ${col} ${def}`); });
+const saleItemCols = db.prepare("PRAGMA table_info(sale_items)").all().map(c => c.name);
+if (!saleItemCols.includes('is_freebie')) db.exec("ALTER TABLE sale_items ADD COLUMN is_freebie INTEGER NOT NULL DEFAULT 0");
 
 /* ---------------- SEED (first run only) ---------------- */
 const branchCount = db.prepare('SELECT COUNT(*) c FROM branches').get().c;
@@ -85,32 +110,35 @@ if (branchCount === 0) {
   insEmp.run(c1, 'EBP-002', 'Cashier', 'Cashier', b1);
   insEmp.run(c2, 'EBP-003', 'Cashier', 'Cashier', b2);
 
-  const insProd = db.prepare('INSERT INTO products(id,sku,name,category,unit,price,cost,reorder_level,is_service) VALUES (?,?,?,?,?,?,?,?,?)');
+  const insProd = db.prepare('INSERT INTO products(id,sku,name,category,unit,price,cost,reorder_level,is_service,color,density,length) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)');
   const insStock = db.prepare('INSERT INTO stock(branch_id,product_id,qty) VALUES (?,?,?)');
   const seedProducts = [
-    // [sku, name, category, unit, price, cost, reorderLevel, isService]
-    ['HHW-001','Brazilian Straight Full Lace Wig 20in','Human Hair Wigs','piece',180.00,120.00,3,0],
-    ['HHW-002','Peruvian Body Wave Wig 22in','Human Hair Wigs','piece',195.00,130.00,3,0],
-    ['HHW-003','Malaysian Curly Wig 18in','Human Hair Wigs','piece',165.00,110.00,3,0],
-    ['SYN-001','Synthetic Bob Wig','Synthetic Wigs','piece',35.00,20.00,8,0],
-    ['SYN-002','Synthetic Long Wavy Wig','Synthetic Wigs','piece',42.00,25.00,8,0],
-    ['LF-001','13x4 Lace Frontal Straight','Lace Frontals','piece',65.00,42.00,5,0],
-    ['LF-002','13x4 Lace Frontal Curly','Lace Frontals','piece',70.00,45.00,5,0],
-    ['CLO-001','4x4 Lace Closure Straight','Closures','piece',38.00,24.00,6,0],
-    ['CLO-002','5x5 Lace Closure Body Wave','Closures','piece',42.00,27.00,6,0],
-    ['BND-001','Brazilian Bundle 18in','Bundles','piece',48.00,30.00,10,0],
-    ['BND-002','Peruvian Bundle 20in','Bundles','piece',55.00,35.00,10,0],
-    ['BRD-001','Braiding Hair Jumbo Pack','Braiding Hair','pack',6.50,4.00,25,0],
-    ['ACC-001','Wig Stand','Accessories','piece',5.00,2.80,12,0],
-    ['ACC-002','Wig Cap','Accessories','piece',1.50,0.80,30,0],
-    ['ACC-003','Edge Brush & Comb Set','Accessories','set',3.50,2.00,20,0],
-    ['OIL-001','Wig & Scalp Growth Oil 100ml','Oils & Treatments','piece',8.50,5.50,15,0],
-    ['OIL-002','Edge Control Gel 100ml','Oils & Treatments','piece',6.00,3.80,15,0],
-    ['OIL-003','Wig Shampoo 250ml','Oils & Treatments','piece',8.00,5.00,15,0],
-    ['INS-001','Wig Installation — Glue-Down','Installations','session',25.00,0,0,1],
-    ['INS-002','Wig Installation — Sew-In','Installations','session',35.00,0,0,1],
-    ['MNT-001','Wig Wash & Revamp','Maintenance','session',20.00,0,0,1],
-    ['MNT-002','Wig Repair & Restyle','Maintenance','session',18.00,0,0,1],
+    // [sku, name, category, unit, price, cost, reorderLevel, isService, color, density, length]
+    ['HHW-001','Brazilian Straight Full Lace Wig 20in','Human Hair Wigs','piece',180.00,120.00,3,0,'Natural Black','150%','20 inch'],
+    ['HHW-002','Peruvian Body Wave Wig 22in','Human Hair Wigs','piece',195.00,130.00,3,0,'Natural Black','180%','22 inch'],
+    ['HHW-003','Malaysian Curly Wig 18in','Human Hair Wigs','piece',165.00,110.00,3,0,'Dark Brown','130%','18 inch'],
+    ['SYN-001','Synthetic Bob Wig','Synthetic Wigs','piece',35.00,20.00,8,0,'Jet Black','130%','12 inch'],
+    ['SYN-002','Synthetic Long Wavy Wig','Synthetic Wigs','piece',42.00,25.00,8,0,'Honey Blonde','130%','24 inch'],
+    ['LF-001','13x4 Lace Frontal Straight','Lace Frontals','piece',65.00,42.00,5,0,'Natural Black','150%','14 inch'],
+    ['LF-002','13x4 Lace Frontal Curly','Lace Frontals','piece',70.00,45.00,5,0,'Natural Black','150%','14 inch'],
+    ['CLO-001','4x4 Lace Closure Straight','Closures','piece',38.00,24.00,6,0,'Natural Black','130%','12 inch'],
+    ['CLO-002','5x5 Lace Closure Body Wave','Closures','piece',42.00,27.00,6,0,'Natural Black','150%','14 inch'],
+    ['BND-001','Brazilian Bundle 18in','Bundles','piece',48.00,30.00,10,0,'Natural Black',null,'18 inch'],
+    ['BND-002','Peruvian Bundle 20in','Bundles','piece',55.00,35.00,10,0,'Natural Black',null,'20 inch'],
+    ['BRD-001','Braiding Hair Jumbo Pack','Braiding Hair','pack',6.50,4.00,25,0,'Jet Black',null,null],
+    ['ACC-001','Wig Stand','Accessories','piece',5.00,2.80,12,0,null,null,null],
+    ['ACC-002','Wig Cap','Accessories','piece',1.50,0.80,30,0,'Beige',null,null],
+    ['ACC-003','Edge Brush & Comb Set','Accessories','set',3.50,2.00,20,0,null,null,null],
+    ['ACC-004','Blending Sponge','Accessories','piece',1.20,0.60,25,0,null,null,null],
+    ['OIL-001','Wig & Scalp Growth Oil 100ml','Oils & Treatments','piece',8.50,5.50,15,0,null,null,null],
+    ['OIL-002','Edge Control Gel 100ml','Oils & Treatments','piece',6.00,3.80,15,0,null,null,null],
+    ['OIL-003','Wig Shampoo 250ml','Oils & Treatments','piece',8.00,5.00,15,0,null,null,null],
+    ['INS-001','Wig Installation — Glue-Down','Installations','session',25.00,0,0,1,null,null,null],
+    ['INS-002','Wig Installation — Sew-In','Installations','session',35.00,0,0,1,null,null,null],
+    ['REV-001','Wig Revamp — Wash & Restyle','Revamp','session',20.00,0,0,1,null,null,null],
+    ['REV-002','Wig Revamp — Deep Repair','Revamp','session',28.00,0,0,1,null,null,null],
+    ['CUS-001','Custom Colouring','Customisation','session',22.00,0,0,1,null,null,null],
+    ['CUS-002','Custom Cutting & Styling','Customisation','session',18.00,0,0,1,null,null,null],
   ];
   seedProducts.forEach(row => {
     const id = uid('prod');
@@ -120,12 +148,22 @@ if (branchCount === 0) {
       insStock.run(b2, id, Math.floor(Math.random()*10)+3);
     }
   });
+  const insCat = db.prepare('INSERT INTO categories(id,name) VALUES (?,?)');
+  [...new Set(seedProducts.map(r => r[2]))].forEach(name => insCat.run(uid('cat'), name));
+  db.prepare('INSERT INTO settings(key,value) VALUES (?,?)').run('fxCurrency', 'ZiG');
+  db.prepare('INSERT INTO settings(key,value) VALUES (?,?)').run('fxRate', '0');
   db.prepare('INSERT INTO counters(name,value) VALUES (?,?)').run('receipt_seq', 0);
   console.log('Database seeded.');
 }
 if (!db.prepare('SELECT 1 FROM counters WHERE name=?').get('receipt_seq')) {
   db.prepare('INSERT INTO counters(name,value) VALUES (?,?)').run('receipt_seq', 0);
 }
+if (db.prepare('SELECT COUNT(*) c FROM categories').get().c === 0) {
+  const insCat = db.prepare('INSERT INTO categories(id,name) VALUES (?,?)');
+  db.prepare('SELECT DISTINCT category FROM products').all().forEach(r => insCat.run(uid('cat'), r.category));
+}
+if (!db.prepare('SELECT 1 FROM settings WHERE key=?').get('fxCurrency')) db.prepare('INSERT INTO settings(key,value) VALUES (?,?)').run('fxCurrency', 'ZiG');
+if (!db.prepare('SELECT 1 FROM settings WHERE key=?').get('fxRate')) db.prepare('INSERT INTO settings(key,value) VALUES (?,?)').run('fxRate', '0');
 
 /* ---------------- HELPERS ---------------- */
 const uid = (p) => p + '_' + crypto.randomBytes(4).toString('hex');
@@ -214,37 +252,127 @@ app.delete('/api/employees/:id', (req, res) => {
   res.json({ ok: true });
 });
 
+/* ---------------- CATEGORIES ---------------- */
+app.get('/api/categories', (req, res) => {
+  res.json(db.prepare('SELECT * FROM categories ORDER BY name').all().map(c => ({ id: c.id, name: c.name })));
+});
+app.post('/api/categories', (req, res) => {
+  const { name, actorId } = req.body || {};
+  if (!name || !name.trim()) return res.status(400).json({ error: 'Category name is required.' });
+  const exists = db.prepare('SELECT 1 FROM categories WHERE LOWER(name)=LOWER(?)').get(name.trim());
+  if (exists) return res.status(409).json({ error: 'That category already exists.' });
+  const id = uid('cat');
+  db.prepare('INSERT INTO categories(id,name) VALUES (?,?)').run(id, name.trim());
+  logAudit({ employeeId: actorId, action: 'Add category', details: `"${name.trim()}" added` });
+  res.json({ id, name: name.trim() });
+});
+app.delete('/api/categories/:id', (req, res) => {
+  const { actorId } = req.body || {};
+  const actor = db.prepare('SELECT * FROM employees WHERE id=?').get(actorId);
+  if (!actor || actor.role !== 'Administrator') return res.status(403).json({ error: 'Only the Administrator can remove categories.' });
+  const cat = db.prepare('SELECT * FROM categories WHERE id=?').get(req.params.id);
+  if (!cat) return res.status(404).json({ error: 'Not found.' });
+  const inUse = db.prepare('SELECT COUNT(*) c FROM products WHERE category=?').get(cat.name).c;
+  if (inUse > 0) return res.status(409).json({ error: `${inUse} product(s) still use this category.` });
+  db.prepare('DELETE FROM categories WHERE id=?').run(cat.id);
+  logAudit({ employeeId: actorId, action: 'Remove category', details: `"${cat.name}" removed` });
+  res.json({ ok: true });
+});
+
+/* ---------------- SETTINGS (foreign currency) ---------------- */
+app.get('/api/settings', (req, res) => {
+  const rows = db.prepare('SELECT * FROM settings').all();
+  const map = {}; rows.forEach(r => map[r.key] = r.value);
+  res.json({ fxCurrency: map.fxCurrency || 'ZiG', fxRate: Number(map.fxRate || 0) });
+});
+app.put('/api/settings', (req, res) => {
+  const { fxCurrency, fxRate, actorId } = req.body || {};
+  const actor = db.prepare('SELECT * FROM employees WHERE id=?').get(actorId);
+  if (!actor || actor.role !== 'Administrator') return res.status(403).json({ error: 'Only the Administrator can change currency settings.' });
+  db.prepare('INSERT INTO settings(key,value) VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value').run('fxCurrency', fxCurrency || 'ZiG');
+  db.prepare('INSERT INTO settings(key,value) VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value').run('fxRate', String(fxRate || 0));
+  logAudit({ employeeId: actorId, action: 'Update currency settings', details: `${fxCurrency}, rate ${fxRate}` });
+  res.json({ ok: true });
+});
+
+/* ---------------- RETURNS ---------------- */
+app.post('/api/returns', (req, res) => {
+  const { branchId, productId, qty, reason, saleId, refundAmount, actorId } = req.body || {};
+  if (!branchId || !productId || !qty || !actorId) return res.status(400).json({ error: 'Missing fields.' });
+  const p = db.prepare('SELECT * FROM products WHERE id=?').get(productId);
+  if (!p) return res.status(404).json({ error: 'Product not found.' });
+  if (!p.is_service) {
+    const cur = db.prepare('SELECT qty FROM stock WHERE branch_id=? AND product_id=?').get(branchId, productId);
+    const after = (cur ? cur.qty : 0) + Number(qty);
+    if (cur) db.prepare('UPDATE stock SET qty=? WHERE branch_id=? AND product_id=?').run(after, branchId, productId);
+    else db.prepare('INSERT INTO stock(branch_id,product_id,qty) VALUES (?,?,?)').run(branchId, productId, after);
+  }
+  const id = uid('ret');
+  db.prepare('INSERT INTO returns(id,branch_id,product_id,qty,reason,sale_id,refund_amount,employee_id,timestamp) VALUES (?,?,?,?,?,?,?,?,?)')
+    .run(id, branchId, productId, qty, reason || '—', saleId || null, refundAmount || 0, actorId, Date.now());
+  logAudit({ branchId, employeeId: actorId, action: 'Stock returned', details: `${p.name}: ${qty} ${p.unit} returned${p.is_service ? '' : ' to stock'} — ${reason || '—'}${refundAmount ? `, refunded $${Number(refundAmount).toFixed(2)}` : ''}` });
+  res.json({ id, ok: true });
+});
+app.get('/api/returns', (req, res) => {
+  const { branchId, all } = req.query;
+  const rows = all === '1'
+    ? db.prepare('SELECT * FROM returns ORDER BY timestamp DESC LIMIT 300').all()
+    : db.prepare('SELECT * FROM returns WHERE branch_id=? ORDER BY timestamp DESC LIMIT 300').all(branchId);
+  res.json(rows.map(r => ({ id: r.id, branchId: r.branch_id, productId: r.product_id, qty: r.qty, reason: r.reason, saleId: r.sale_id, refundAmount: r.refund_amount, employeeId: r.employee_id, timestamp: r.timestamp })));
+});
+
+/* ---------------- REPORTS ---------------- */
+app.get('/api/reports/sales', (req, res) => {
+  const { branchId, all, period } = req.query;
+  const now = Date.now();
+  let sinceMs, fmt;
+  if (period === 'yearly') { sinceMs = now - 365 * 24 * 3600 * 1000; fmt = '%Y-%m'; }
+  else if (period === 'monthly') { sinceMs = now - 30 * 24 * 3600 * 1000; fmt = '%Y-%m-%d'; }
+  else { sinceMs = now - 7 * 24 * 3600 * 1000; fmt = '%Y-%m-%d'; }
+  const rows = all === '1'
+    ? db.prepare(`SELECT strftime('${fmt}', timestamp/1000, 'unixepoch') as label, SUM(total) as total, COUNT(*) as count FROM sales WHERE timestamp>=? GROUP BY label ORDER BY label`).all(sinceMs)
+    : db.prepare(`SELECT strftime('${fmt}', timestamp/1000, 'unixepoch') as label, SUM(total) as total, COUNT(*) as count FROM sales WHERE branch_id=? AND timestamp>=? GROUP BY label ORDER BY label`).all(branchId, sinceMs);
+  res.json(rows);
+});
+
 /* ---------------- PRODUCTS ---------------- */
 app.get('/api/products', (req, res) => {
   res.json(db.prepare('SELECT * FROM products').all().map(p => ({
     id: p.id, sku: p.sku, name: p.name, category: p.category, unit: p.unit,
-    price: p.price, cost: p.cost, reorderLevel: p.reorder_level, isService: !!p.is_service
+    price: p.price, cost: p.cost, reorderLevel: p.reorder_level, isService: !!p.is_service,
+    color: p.color, density: p.density, length: p.length
   })));
 });
 app.post('/api/products', (req, res) => {
-  const { sku, name, category, unit, price, cost, reorderLevel, openingStock, isService, branchId, actorId } = req.body || {};
+  const { sku, name, category, unit, price, cost, reorderLevel, openingStock, isService, color, density, length, branchId, actorId } = req.body || {};
   if (!sku || !name || !category || !unit) return res.status(400).json({ error: 'Missing fields.' });
   const exists = db.prepare('SELECT 1 FROM products WHERE LOWER(sku)=LOWER(?)').get(sku);
   if (exists) return res.status(409).json({ error: 'That SKU already exists.' });
+  if (!db.prepare('SELECT 1 FROM categories WHERE name=?').get(category)) {
+    db.prepare('INSERT INTO categories(id,name) VALUES (?,?)').run(uid('cat'), category);
+  }
   const id = uid('prod');
   const svc = isService ? 1 : 0;
-  db.prepare('INSERT INTO products(id,sku,name,category,unit,price,cost,reorder_level,is_service) VALUES (?,?,?,?,?,?,?,?,?)')
-    .run(id, sku, name, category, unit, price || 0, svc ? 0 : (cost || 0), svc ? 0 : (reorderLevel || 0), svc);
+  db.prepare('INSERT INTO products(id,sku,name,category,unit,price,cost,reorder_level,is_service,color,density,length) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)')
+    .run(id, sku, name, category, unit, price || 0, svc ? 0 : (cost || 0), svc ? 0 : (reorderLevel || 0), svc, color || null, density || null, length || null);
   if (!svc) {
     const branches = db.prepare('SELECT id FROM branches').all();
     const insStock = db.prepare('INSERT INTO stock(branch_id,product_id,qty) VALUES (?,?,?)');
     branches.forEach(b => insStock.run(b.id, id, b.id === branchId ? (openingStock || 0) : 0));
   }
   logAudit({ branchId, employeeId: actorId, action: svc ? 'Add service' : 'Add product', details: `${name} (${sku}) added${svc ? '' : `, opening stock ${openingStock || 0} ${unit}`}` });
-  res.json({ id, sku, name, category, unit, price, cost, reorderLevel, isService: !!svc });
+  res.json({ id, sku, name, category, unit, price, cost, reorderLevel, isService: !!svc, color, density, length });
 });
 app.put('/api/products/:id', (req, res) => {
-  const { sku, name, category, unit, price, cost, reorderLevel, isService, actorId, branchId } = req.body || {};
+  const { sku, name, category, unit, price, cost, reorderLevel, isService, color, density, length, actorId, branchId } = req.body || {};
   const p = db.prepare('SELECT * FROM products WHERE id=?').get(req.params.id);
   if (!p) return res.status(404).json({ error: 'Not found.' });
+  if (!db.prepare('SELECT 1 FROM categories WHERE name=?').get(category)) {
+    db.prepare('INSERT INTO categories(id,name) VALUES (?,?)').run(uid('cat'), category);
+  }
   const svc = isService ? 1 : 0;
-  db.prepare('UPDATE products SET sku=?,name=?,category=?,unit=?,price=?,cost=?,reorder_level=?,is_service=? WHERE id=?')
-    .run(sku, name, category, unit, price, svc ? 0 : cost, svc ? 0 : reorderLevel, svc, p.id);
+  db.prepare('UPDATE products SET sku=?,name=?,category=?,unit=?,price=?,cost=?,reorder_level=?,is_service=?,color=?,density=?,length=? WHERE id=?')
+    .run(sku, name, category, unit, price, svc ? 0 : cost, svc ? 0 : reorderLevel, svc, color || null, density || null, length || null, p.id);
   logAudit({ branchId, employeeId: actorId, action: 'Edit product', details: `${name} (${sku}) updated` });
   res.json({ ok: true });
 });
@@ -320,7 +448,8 @@ app.post('/api/stock-requests/:id/reject', (req, res) => {
 
 /* ---------------- SALES / POS ---------------- */
 app.post('/api/sales', (req, res) => {
-  const { branchId, employeeId, items } = req.body || {}; // items: [{productId, qty, price}]
+  // items: [{productId, qty, price, isFreebie}]
+  const { branchId, employeeId, items, discount, paymentMethod, amountReceived, currency } = req.body || {};
   if (!branchId || !employeeId || !Array.isArray(items) || items.length === 0) return res.status(400).json({ error: 'Missing fields.' });
 
   for (const it of items) {
@@ -334,30 +463,44 @@ app.post('/api/sales', (req, res) => {
   db.prepare('UPDATE counters SET value=? WHERE name=?').run(nextSeq, 'receipt_seq');
   const seq = 'EBP-' + String(nextSeq).padStart(6, '0');
 
+  const disc = Number(discount) || 0;
+  const subtotal = items.reduce((a, it) => a + (it.isFreebie ? 0 : it.price * it.qty), 0);
+  const total = Math.max(0, subtotal - disc);
+  const fxRow = db.prepare('SELECT value FROM settings WHERE key=?').get('fxRate');
+  const fxRate = fxRow ? Number(fxRow.value) : 0;
+  const pay = paymentMethod || 'Cash';
+  const received = amountReceived != null ? Number(amountReceived) : null;
+  let changeDue = null;
+  if (received != null) {
+    const receivedInUsd = (currency && currency !== 'USD' && fxRate > 0) ? received / fxRate : received;
+    changeDue = receivedInUsd - total;
+  }
+
   const saleId = uid('sale');
-  const total = items.reduce((a, it) => a + it.price * it.qty, 0);
-  db.prepare('INSERT INTO sales(id,seq,branch_id,employee_id,total,timestamp) VALUES (?,?,?,?,?,?)')
-    .run(saleId, seq, branchId, employeeId, total, Date.now());
-  const insItem = db.prepare('INSERT INTO sale_items(sale_id,product_id,qty,price) VALUES (?,?,?,?)');
+  db.prepare('INSERT INTO sales(id,seq,branch_id,employee_id,total,timestamp,discount,payment_method,amount_received,change_due,currency,fx_rate) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)')
+    .run(saleId, seq, branchId, employeeId, total, Date.now(), disc, pay, received, changeDue, currency || 'USD', fxRate);
+  const insItem = db.prepare('INSERT INTO sale_items(sale_id,product_id,qty,price,is_freebie) VALUES (?,?,?,?,?)');
   items.forEach(it => {
-    insItem.run(saleId, it.productId, it.qty, it.price);
+    insItem.run(saleId, it.productId, it.qty, it.isFreebie ? 0 : it.price, it.isFreebie ? 1 : 0);
     const p = db.prepare('SELECT is_service FROM products WHERE id=?').get(it.productId);
     if (!(p && p.is_service)) {
       db.prepare('UPDATE stock SET qty = qty - ? WHERE branch_id=? AND product_id=?').run(it.qty, branchId, it.productId);
     }
   });
-  logAudit({ branchId, employeeId, action: 'Sale', details: `${seq} — ${items.length} item line(s), $${total.toFixed(2)}` });
-  res.json({ id: saleId, seq, total, timestamp: Date.now(), items });
+  logAudit({ branchId, employeeId, action: 'Sale', details: `${seq} — ${items.length} item line(s), $${total.toFixed(2)}${disc ? ` (discount $${disc.toFixed(2)})` : ''}, ${pay}` });
+  res.json({ id: saleId, seq, total, subtotal, discount: disc, paymentMethod: pay, amountReceived: received, changeDue, currency: currency || 'USD', fxRate, timestamp: Date.now(), items });
 });
 app.get('/api/sales', (req, res) => {
   const { branchId } = req.query;
   const sales = branchId
     ? db.prepare('SELECT * FROM sales WHERE branch_id=? ORDER BY timestamp DESC LIMIT 300').all(branchId)
     : db.prepare('SELECT * FROM sales ORDER BY timestamp DESC LIMIT 300').all();
-  const getItems = db.prepare('SELECT product_id, qty, price FROM sale_items WHERE sale_id=?');
+  const getItems = db.prepare('SELECT product_id, qty, price, is_freebie FROM sale_items WHERE sale_id=?');
   res.json(sales.map(s => ({
     id: s.id, seq: s.seq, branchId: s.branch_id, employeeId: s.employee_id, total: s.total, timestamp: s.timestamp,
-    items: getItems.all(s.id).map(i => ({ productId: i.product_id, qty: i.qty, price: i.price }))
+    discount: s.discount, paymentMethod: s.payment_method, amountReceived: s.amount_received, changeDue: s.change_due,
+    currency: s.currency, fxRate: s.fx_rate,
+    items: getItems.all(s.id).map(i => ({ productId: i.product_id, qty: i.qty, price: i.price, isFreebie: !!i.is_freebie }))
   })));
 });
 
