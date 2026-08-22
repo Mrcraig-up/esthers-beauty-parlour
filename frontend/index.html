@@ -22,7 +22,7 @@
   .hazard{height:4px;background:linear-gradient(90deg,var(--gold-hover),var(--gold),var(--blush-deep),var(--gold));}
   #login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;background:linear-gradient(160deg,var(--blush) 0%,#FFFEFA 55%);color:var(--ink);padding:24px;}
   #login-screen .hazard{position:fixed;top:0;left:0;right:0;}
-  .brand{font-size:32px;font-weight:700;color:var(--gold-money);letter-spacing:.02em;margin-bottom:2px;text-align:center;max-width:420px;line-height:1.2;font-family:'Playfair Display',serif;}
+  .brand-logo{width:100%;max-width:280px;height:auto;margin-bottom:6px;}
   .brand-sub{color:var(--steel);font-size:12.5px;letter-spacing:.2em;margin-bottom:28px;text-transform:uppercase;}
   .login-card{background:#fff;border:1px solid var(--line);box-shadow:0 10px 34px rgba(184,146,74,.14);border-radius:20px;padding:30px;width:100%;max-width:360px;}
   .login-card label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--steel);margin:14px 0 6px;}
@@ -41,8 +41,8 @@
   #app{display:none;min-height:100vh;grid-template-columns:230px 1fr;}
   #app.show{display:grid;}
   #sidebar{background:#fff;border-right:1px solid var(--line);color:var(--ink);padding:22px 0;display:flex;flex-direction:column;}
-  #sidebar .brand2{color:var(--gold-money);font-size:18px;font-weight:700;line-height:1.25;padding:0 22px 6px;font-family:'Playfair Display',serif;}
-  #sidebar .brand2-sub{padding:0 22px;color:var(--steel);font-size:10px;letter-spacing:.18em;margin-bottom:22px;text-transform:uppercase;}
+  #sidebar .brand2-logo{display:block;width:150px;height:auto;margin:0 auto 4px;}
+  #sidebar .brand2-sub{padding:0 22px;color:var(--steel);font-size:10px;letter-spacing:.18em;margin-bottom:22px;text-transform:uppercase;text-align:center;}
   #sidebar nav{flex:1;}
   #sidebar button.navlink{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:none;color:var(--steel);padding:11px 22px;font-family:'Inter',sans-serif;font-weight:600;text-transform:uppercase;font-size:12px;letter-spacing:.04em;cursor:pointer;border-left:3px solid transparent;}
   #sidebar button.navlink:hover{color:var(--ink);background:var(--blush);}
@@ -84,14 +84,14 @@
   .pos-search input{flex:1;min-width:160px;}
   .catchip{border:1px solid var(--line);background:#fff;padding:6px 13px;border-radius:999px;font-size:12px;cursor:pointer;text-transform:uppercase;letter-spacing:.03em;font-weight:600;color:var(--ink);}
   .catchip.active{background:var(--gold);color:#fff;border-color:var(--gold);}
-  .prod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;max-height:560px;overflow-y:auto;padding-right:4px;}
-  .prod-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px;cursor:pointer;transition:.12s;}
+  .prod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(108px,1fr));gap:8px;max-height:560px;overflow-y:auto;padding-right:4px;}
+  .prod-card{background:#fff;border:1px solid var(--line);border-radius:11px;padding:9px 10px;cursor:pointer;transition:.12s;}
   .prod-card:hover{border-color:var(--gold);box-shadow:0 4px 14px rgba(184,146,74,.15);transform:translateY(-1px);}
-  .prod-card .pname{font-weight:600;font-size:13.5px;margin-bottom:3px;min-height:34px;}
+  .prod-card .pname{font-weight:600;font-size:11.5px;margin-bottom:3px;line-height:1.25;min-height:28px;}
   .prod-card .pattrs{font-size:10.5px;color:var(--steel);margin-bottom:2px;}
   .prod-card .psku{font-size:10.5px;color:var(--steel);font-family:'IBM Plex Mono',monospace;}
-  .prod-card .pprice{font-family:'Playfair Display',serif;color:var(--gold-money);font-size:16px;margin-top:6px;font-weight:600;}
-  .prod-card .pstock{font-size:11px;margin-top:2px;}
+  .prod-card .pprice{font-family:'Playfair Display',serif;color:var(--gold-money);font-size:13.5px;font-weight:600;}
+  .prod-card .pstock{font-size:10px;margin-top:2px;}
   .prod-card.nostock{opacity:.45;cursor:not-allowed;}
   .cart{background:#fff;border:1px solid var(--gold);color:var(--ink);border-radius:18px;padding:18px;position:sticky;top:16px;box-shadow:0 8px 26px rgba(184,146,74,.12);}
   .cart h3{color:var(--gold-money);margin:0 0 10px;font-size:17px;}
@@ -147,7 +147,7 @@
   @media(max-width:640px){
     body{-webkit-text-size-adjust:100%;}
     .conn-badge{top:auto;bottom:14px;right:14px;font-size:10px;padding:4px 10px;}
-    .brand{font-size:24px;max-width:280px;}
+    .brand-logo{max-width:200px;}
     .login-card{padding:20px;max-width:100%;}
     #login-screen{padding:16px;}
     .topbar{margin-bottom:16px;}
@@ -155,7 +155,7 @@
     .cards{grid-template-columns:1fr 1fr;gap:10px;}
     .card{padding:13px 14px;}
     .card .val{font-size:22px;}
-    .prod-grid{grid-template-columns:repeat(auto-fill,minmax(128px,1fr));max-height:none;gap:8px;}
+    .prod-grid{grid-template-columns:repeat(auto-fill,minmax(96px,1fr));max-height:none;gap:6px;}
     .prod-card{padding:10px;}
     .prod-card .pname{min-height:auto;font-size:12.5px;}
     .cart-item .ci-qty button{width:28px;height:28px;font-size:15px;}
@@ -169,7 +169,7 @@
   }
   @media(min-width:1400px){
     #main{padding:32px 48px;}
-    .prod-grid{grid-template-columns:repeat(auto-fill,minmax(168px,1fr));}
+    .prod-grid{grid-template-columns:repeat(auto-fill,minmax(120px,1fr));}
   }
 </style>
 </head>
@@ -179,7 +179,7 @@
 
 <div id="login-screen">
   <div class="hazard"></div>
-  <div class="brand">ESTHERS BEAUTY PARLOUR</div>
+  <img src="logo-full.png" alt="Esther's Beauty Parlour — A Queen's Beauty" class="brand-logo">
   <div class="brand-sub">Wigs &amp; Hair · Stock &amp; Till Control</div>
   <div class="login-card">
     <label>Work ID</label>
@@ -195,7 +195,7 @@
 
 <div id="app">
   <div id="sidebar">
-    <div class="brand2">ESTHERS BEAUTY<br>PARLOUR</div>
+    <img src="logo-emblem.png" alt="Esther's Beauty Parlour" class="brand2-logo">
     <div class="brand2-sub">Stock &amp; Till</div>
     <nav id="navlinks"></nav>
     <div class="branchswitch" id="branchswitch-wrap" style="display:none;"><select id="branchswitch"></select></div>
@@ -442,7 +442,6 @@ function renderDashboard(){
     <div class="card"><div class="label">Stock Value (cost)</div><div class="val">${money(stockValue)}</div></div>
     <div class="card ${lowCount?'bad':''}"><div class="label">Low Stock Items</div><div class="val">${lowCount}</div></div>
     <div class="card ${pending?'bad':''}"><div class="label">Pending Stock Confirmations</div><div class="val">${pending}</div></div>
-    ${session.isAdmin ? `<div class="card"><div class="label">Foreign Currency Rate</div><div class="val" style="font-size:18px;">1 USD = ${fx.fxRate||'—'} ${fx.fxCurrency}</div></div>` : ''}
   </div>
   <div class="pos-wrap" style="grid-template-columns:1.3fr 1fr;">
     <div class="panel"><h3>Recent Accountability Log</h3>
@@ -525,6 +524,8 @@ function renderPOS(){
 function posFilteredProducts(){
   const q = (document.getElementById('pos-search-input')?.value || '').toLowerCase();
   return CACHE.products.filter(p=>{
+    if (freebieMode) { if (!p.isFreebieOnly) return false; }
+    else { if (p.isFreebieOnly) return false; }
     if(posCategory!=='All' && p.category!==posCategory) return false;
     if(q && !(p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q))) return false;
     return true;
@@ -533,30 +534,27 @@ function posFilteredProducts(){
 function renderProdGrid(){
   const stock = CACHE.stock || {};
   const grid = document.getElementById('prod-grid'); if(!grid) return;
-  grid.innerHTML = posFilteredProducts().map(p=>{
+  const items = posFilteredProducts();
+  grid.innerHTML = items.map(p=>{
     const q = stock[p.id]||0;
     const noStock = !p.isService && q<=0;
     const stockLine = p.isService
-      ? `<div class="pstock" style="color:var(--gold-money);">Service</div>`
-      : `<div class="pstock" style="color:${q<=p.reorderLevel?'var(--bad)':'var(--steel)'}">${q} ${p.unit} in stock</div>`;
-    const attrs = [p.color, p.density, p.length].filter(Boolean).join(' · ');
+      ? `<span style="color:var(--gold-money);">Service</span>`
+      : `<span style="color:${q<=p.reorderLevel?'var(--bad)':'var(--steel)'}">${q} left</span>`;
     return `<div class="prod-card ${noStock?'nostock':''}" data-id="${p.id}">
-      <div class="pname">${p.name}</div><div class="psku">${p.sku}</div>
-      ${attrs?`<div class="pattrs">${attrs}</div>`:''}
-      <div class="pprice">${money(p.price)} <span style="font-size:11px;color:var(--steel);">/ ${p.unit}</span></div>
-      ${stockLine}
+      <div class="pname">${p.name}</div>
+      <div class="pprice">${money(p.price)}</div>
+      <div class="pstock">${stockLine}</div>
     </div>`;
-  }).join('') || '<div class="empty-state">No products match.</div>';
+  }).join('') || `<div class="empty-state">${freebieMode ? 'No freebie items yet — mark one as a freebie in Inventory first.' : 'No products match.'}</div>`;
   grid.querySelectorAll('.prod-card').forEach(el=> el.onclick = ()=>{ if(!el.classList.contains('nostock')) addToCart(el.dataset.id); });
 }
 function addToCart(prodId){
   const stock = CACHE.stock || {};
   const p = CACHE.products.find(x=>x.id===prodId);
-  if (freebieMode) {
+  if (freebieMode || p.isFreebieOnly) {
     const existing = posCart.find(c=>c.productId===prodId && c.isFreebie);
     if (existing) existing.qty += 1; else posCart.push({productId:prodId, qty:1, price:p.price, isFreebie:true});
-    freebieMode = false;
-    document.getElementById('add-freebie-btn').textContent = '+ Add Freebie';
     toast(`${p.name} added as a freebie.`);
     renderCart();
     return;
@@ -614,7 +612,15 @@ function bindPOS(){
   document.querySelectorAll('.catchip').forEach(c=> c.onclick = ()=>{ posCategory=c.dataset.cat; document.getElementById('main').innerHTML = renderPOS(); bindPOS(); });
   document.getElementById('clear-cart-btn').onclick = ()=>{ posCart=[]; checkoutState = { discount:0, paymentMethod:'Cash', amountReceived:null, currency:'USD' }; document.getElementById('main').innerHTML = renderPOS(); bindPOS(); };
   document.getElementById('checkout-btn').onclick = doCheckout;
-  document.getElementById('add-freebie-btn').onclick = ()=>{ freebieMode = !freebieMode; document.getElementById('add-freebie-btn').textContent = freebieMode ? '★ Tap a product to give it free…' : '+ Add Freebie'; };
+  document.getElementById('add-freebie-btn').onclick = ()=>{
+    freebieMode = !freebieMode;
+    const btn = document.getElementById('add-freebie-btn');
+    btn.textContent = freebieMode ? '★ Tap an item below to give it free' : '+ Add Freebie';
+    btn.style.background = freebieMode ? 'var(--gold)' : '';
+    btn.style.color = freebieMode ? '#fff' : '';
+    posCategory = 'All';
+    document.getElementById('main').innerHTML = renderPOS(); bindPOS();
+  };
   const discInput = document.getElementById('pos-discount');
   discInput.oninput = ()=>{ checkoutState.discount = Number(discInput.value)||0; renderCart(); };
   document.querySelectorAll('[data-pay]').forEach(b=> b.onclick = ()=>{ checkoutState.paymentMethod = b.dataset.pay; document.getElementById('main').innerHTML = renderPOS(); bindPOS(); });
@@ -707,13 +713,13 @@ function bindInventory(){
 function openProductModal(prodId){
   const p = prodId ? CACHE.products.find(x=>x.id===prodId) : null;
   const isSvc = p ? !!p.isService : false;
-  const cats = CACHE.categories || [];
+  const isFreebieOnly = p ? !!p.isFreebieOnly : false;
   openModal(`<h3>${p?'Edit Product':'Add Product / Service'}</h3>
     <div class="field"><label><input type="checkbox" id="pf-isservice" ${isSvc?'checked':''} style="width:auto;margin-right:6px;">This is a service (no stock tracking, e.g. installation, revamp, customisation)</label></div>
+    <div class="field" id="pf-freebie-field"><label><input type="checkbox" id="pf-isfreebie" ${isFreebieOnly?'checked':''} style="width:auto;margin-right:6px;">This is a freebie giveaway item — never sold, only given free with a sale</label></div>
     <div class="field"><label>Product / Service Name</label><input id="pf-name" value="${p?p.name:''}"></div>
     <div class="row2"><div class="field"><label>SKU</label><input id="pf-sku" value="${p?p.sku:''}"></div>
-      <div class="field"><label>Category</label><input id="pf-cat" list="pf-cat-list" value="${p?p.category:''}" placeholder="Pick or type a new one">
-        <datalist id="pf-cat-list">${cats.map(c=>`<option value="${c.name}">`).join('')}</datalist></div></div>
+      <div class="field"><label>Category</label><input id="pf-cat" value="${p?p.category:''}" placeholder="Type a category name"></div></div>
     <div class="row2"><div class="field"><label>Unit</label><select id="pf-unit">${UNITS.map(u=>`<option value="${u}" ${p&&p.unit===u?'selected':''}>${u}</option>`).join('')}</select></div>
       <div class="field" id="pf-reorder-wrap"><label>Reorder Level</label><input id="pf-reorder" type="number" value="${p?p.reorderLevel:5}"></div></div>
     <div class="row3" id="pf-attrs-wrap"><div class="field"><label>Colour</label><input id="pf-color" value="${p&&p.color?p.color:''}" placeholder="e.g. Natural Black"></div>
@@ -727,9 +733,10 @@ function openProductModal(prodId){
   const svcCheckbox = document.getElementById('pf-isservice');
   const toggleServiceFields = ()=>{
     const svc = svcCheckbox.checked;
-    ['pf-reorder-wrap','pf-cost-wrap','pf-openstock-wrap'].forEach(id=>{
+    ['pf-reorder-wrap','pf-cost-wrap','pf-openstock-wrap','pf-freebie-field'].forEach(id=>{
       const el = document.getElementById(id); if(el) el.style.display = svc?'none':'';
     });
+    if (svc) document.getElementById('pf-isfreebie').checked = false;
   };
   svcCheckbox.onchange = toggleServiceFields;
   toggleServiceFields();
@@ -744,9 +751,10 @@ function openProductModal(prodId){
     const category = document.getElementById('pf-cat').value.trim();
     if (!name || !sku || !category) return;
     const isService = document.getElementById('pf-isservice').checked;
+    const isFreebieOnly = document.getElementById('pf-isfreebie').checked;
     const body = { name, sku, category, unit: document.getElementById('pf-unit').value,
       reorderLevel: Number(document.getElementById('pf-reorder').value)||0, price: Number(document.getElementById('pf-price').value)||0,
-      cost: Number(document.getElementById('pf-cost').value)||0, isService,
+      cost: Number(document.getElementById('pf-cost').value)||0, isService, isFreebieOnly,
       color: document.getElementById('pf-color').value.trim() || null, density: document.getElementById('pf-density').value.trim() || null, length: document.getElementById('pf-length').value.trim() || null,
       actorId: session.employeeId, branchId: session.branchId };
     try {

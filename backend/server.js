@@ -82,6 +82,7 @@ if (!productCols.includes('is_service')) {
 ['color', 'density', 'length'].forEach(col => {
   if (!productCols.includes(col)) db.exec(`ALTER TABLE products ADD COLUMN ${col} TEXT`);
 });
+if (!productCols.includes('is_freebie_only')) db.exec("ALTER TABLE products ADD COLUMN is_freebie_only INTEGER NOT NULL DEFAULT 0");
 const saleCols = db.prepare("PRAGMA table_info(sales)").all().map(c => c.name);
 [
   ['discount', 'REAL NOT NULL DEFAULT 0'],
@@ -110,35 +111,21 @@ if (branchCount === 0) {
   insEmp.run(c1, 'EBP-002', 'Cashier', 'Cashier', b1);
   insEmp.run(c2, 'EBP-003', 'Cashier', 'Cashier', b2);
 
-  const insProd = db.prepare('INSERT INTO products(id,sku,name,category,unit,price,cost,reorder_level,is_service,color,density,length) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)');
+  const insProd = db.prepare('INSERT INTO products(id,sku,name,category,unit,price,cost,reorder_level,is_service,color,density,length,is_freebie_only) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)');
   const insStock = db.prepare('INSERT INTO stock(branch_id,product_id,qty) VALUES (?,?,?)');
   const seedProducts = [
-    // [sku, name, category, unit, price, cost, reorderLevel, isService, color, density, length]
-    ['HHW-001','Brazilian Straight Full Lace Wig 20in','Human Hair Wigs','piece',180.00,120.00,3,0,'Natural Black','150%','20 inch'],
-    ['HHW-002','Peruvian Body Wave Wig 22in','Human Hair Wigs','piece',195.00,130.00,3,0,'Natural Black','180%','22 inch'],
-    ['HHW-003','Malaysian Curly Wig 18in','Human Hair Wigs','piece',165.00,110.00,3,0,'Dark Brown','130%','18 inch'],
-    ['SYN-001','Synthetic Bob Wig','Synthetic Wigs','piece',35.00,20.00,8,0,'Jet Black','130%','12 inch'],
-    ['SYN-002','Synthetic Long Wavy Wig','Synthetic Wigs','piece',42.00,25.00,8,0,'Honey Blonde','130%','24 inch'],
-    ['LF-001','13x4 Lace Frontal Straight','Lace Frontals','piece',65.00,42.00,5,0,'Natural Black','150%','14 inch'],
-    ['LF-002','13x4 Lace Frontal Curly','Lace Frontals','piece',70.00,45.00,5,0,'Natural Black','150%','14 inch'],
-    ['CLO-001','4x4 Lace Closure Straight','Closures','piece',38.00,24.00,6,0,'Natural Black','130%','12 inch'],
-    ['CLO-002','5x5 Lace Closure Body Wave','Closures','piece',42.00,27.00,6,0,'Natural Black','150%','14 inch'],
-    ['BND-001','Brazilian Bundle 18in','Bundles','piece',48.00,30.00,10,0,'Natural Black',null,'18 inch'],
-    ['BND-002','Peruvian Bundle 20in','Bundles','piece',55.00,35.00,10,0,'Natural Black',null,'20 inch'],
-    ['BRD-001','Braiding Hair Jumbo Pack','Braiding Hair','pack',6.50,4.00,25,0,'Jet Black',null,null],
-    ['ACC-001','Wig Stand','Accessories','piece',5.00,2.80,12,0,null,null,null],
-    ['ACC-002','Wig Cap','Accessories','piece',1.50,0.80,30,0,'Beige',null,null],
-    ['ACC-003','Edge Brush & Comb Set','Accessories','set',3.50,2.00,20,0,null,null,null],
-    ['ACC-004','Blending Sponge','Accessories','piece',1.20,0.60,25,0,null,null,null],
-    ['OIL-001','Wig & Scalp Growth Oil 100ml','Oils & Treatments','piece',8.50,5.50,15,0,null,null,null],
-    ['OIL-002','Edge Control Gel 100ml','Oils & Treatments','piece',6.00,3.80,15,0,null,null,null],
-    ['OIL-003','Wig Shampoo 250ml','Oils & Treatments','piece',8.00,5.00,15,0,null,null,null],
-    ['INS-001','Wig Installation — Glue-Down','Installations','session',25.00,0,0,1,null,null,null],
-    ['INS-002','Wig Installation — Sew-In','Installations','session',35.00,0,0,1,null,null,null],
-    ['REV-001','Wig Revamp — Wash & Restyle','Revamp','session',20.00,0,0,1,null,null,null],
-    ['REV-002','Wig Revamp — Deep Repair','Revamp','session',28.00,0,0,1,null,null,null],
-    ['CUS-001','Custom Colouring','Customisation','session',22.00,0,0,1,null,null,null],
-    ['CUS-002','Custom Cutting & Styling','Customisation','session',18.00,0,0,1,null,null,null],
+    // [sku, name, category, unit, price, cost, reorderLevel, isService, color, density, length, isFreebieOnly]
+    // One example product per category to start — add more of your own from here.
+    ['HHW-001','Brazilian Straight Full Lace Wig 20in','Human Hair Wigs','piece',180.00,120.00,3,0,'Natural Black','150%','20 inch',0],
+    ['SYN-001','Synthetic Bob Wig','Synthetic Wigs','piece',35.00,20.00,8,0,'Jet Black','130%','12 inch',0],
+    ['LF-001','13x4 Lace Frontal Straight','Lace Frontals','piece',65.00,42.00,5,0,'Natural Black','150%','14 inch',0],
+    ['CLO-001','4x4 Lace Closure Straight','Closures','piece',38.00,24.00,6,0,'Natural Black','130%','12 inch',0],
+    ['ACC-001','Wig Stand','Accessories','piece',5.00,2.80,12,0,null,null,null,0],
+    ['ACC-002','Wig Cap','Accessories','piece',1.50,0.80,30,0,'Beige',null,null,1],
+    ['OIL-001','Wig & Scalp Growth Oil 100ml','Oils & Treatments','piece',8.50,5.50,15,0,null,null,null,0],
+    ['INS-001','Wig Installation — Sew-In','Installations','session',35.00,0,0,1,null,null,null,0],
+    ['REV-001','Wig Revamp — Wash & Restyle','Revamp','session',20.00,0,0,1,null,null,null,0],
+    ['CUS-001','Custom Colouring','Customisation','session',22.00,0,0,1,null,null,null,0],
   ];
   seedProducts.forEach(row => {
     const id = uid('prod');
@@ -340,11 +327,11 @@ app.get('/api/products', (req, res) => {
   res.json(db.prepare('SELECT * FROM products').all().map(p => ({
     id: p.id, sku: p.sku, name: p.name, category: p.category, unit: p.unit,
     price: p.price, cost: p.cost, reorderLevel: p.reorder_level, isService: !!p.is_service,
-    color: p.color, density: p.density, length: p.length
+    color: p.color, density: p.density, length: p.length, isFreebieOnly: !!p.is_freebie_only
   })));
 });
 app.post('/api/products', (req, res) => {
-  const { sku, name, category, unit, price, cost, reorderLevel, openingStock, isService, color, density, length, branchId, actorId } = req.body || {};
+  const { sku, name, category, unit, price, cost, reorderLevel, openingStock, isService, color, density, length, isFreebieOnly, branchId, actorId } = req.body || {};
   if (!sku || !name || !category || !unit) return res.status(400).json({ error: 'Missing fields.' });
   const exists = db.prepare('SELECT 1 FROM products WHERE LOWER(sku)=LOWER(?)').get(sku);
   if (exists) return res.status(409).json({ error: 'That SKU already exists.' });
@@ -353,26 +340,28 @@ app.post('/api/products', (req, res) => {
   }
   const id = uid('prod');
   const svc = isService ? 1 : 0;
-  db.prepare('INSERT INTO products(id,sku,name,category,unit,price,cost,reorder_level,is_service,color,density,length) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)')
-    .run(id, sku, name, category, unit, price || 0, svc ? 0 : (cost || 0), svc ? 0 : (reorderLevel || 0), svc, color || null, density || null, length || null);
+  const freebieOnly = (!svc && isFreebieOnly) ? 1 : 0;
+  db.prepare('INSERT INTO products(id,sku,name,category,unit,price,cost,reorder_level,is_service,color,density,length,is_freebie_only) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)')
+    .run(id, sku, name, category, unit, price || 0, svc ? 0 : (cost || 0), svc ? 0 : (reorderLevel || 0), svc, color || null, density || null, length || null, freebieOnly);
   if (!svc) {
     const branches = db.prepare('SELECT id FROM branches').all();
     const insStock = db.prepare('INSERT INTO stock(branch_id,product_id,qty) VALUES (?,?,?)');
     branches.forEach(b => insStock.run(b.id, id, b.id === branchId ? (openingStock || 0) : 0));
   }
-  logAudit({ branchId, employeeId: actorId, action: svc ? 'Add service' : 'Add product', details: `${name} (${sku}) added${svc ? '' : `, opening stock ${openingStock || 0} ${unit}`}` });
-  res.json({ id, sku, name, category, unit, price, cost, reorderLevel, isService: !!svc, color, density, length });
+  logAudit({ branchId, employeeId: actorId, action: svc ? 'Add service' : 'Add product', details: `${name} (${sku}) added${svc ? '' : `, opening stock ${openingStock || 0} ${unit}`}${freebieOnly ? ' — freebie-only item' : ''}` });
+  res.json({ id, sku, name, category, unit, price, cost, reorderLevel, isService: !!svc, color, density, length, isFreebieOnly: !!freebieOnly });
 });
 app.put('/api/products/:id', (req, res) => {
-  const { sku, name, category, unit, price, cost, reorderLevel, isService, color, density, length, actorId, branchId } = req.body || {};
+  const { sku, name, category, unit, price, cost, reorderLevel, isService, color, density, length, isFreebieOnly, actorId, branchId } = req.body || {};
   const p = db.prepare('SELECT * FROM products WHERE id=?').get(req.params.id);
   if (!p) return res.status(404).json({ error: 'Not found.' });
   if (!db.prepare('SELECT 1 FROM categories WHERE name=?').get(category)) {
     db.prepare('INSERT INTO categories(id,name) VALUES (?,?)').run(uid('cat'), category);
   }
   const svc = isService ? 1 : 0;
-  db.prepare('UPDATE products SET sku=?,name=?,category=?,unit=?,price=?,cost=?,reorder_level=?,is_service=?,color=?,density=?,length=? WHERE id=?')
-    .run(sku, name, category, unit, price, svc ? 0 : cost, svc ? 0 : reorderLevel, svc, color || null, density || null, length || null, p.id);
+  const freebieOnly = (!svc && isFreebieOnly) ? 1 : 0;
+  db.prepare('UPDATE products SET sku=?,name=?,category=?,unit=?,price=?,cost=?,reorder_level=?,is_service=?,color=?,density=?,length=?,is_freebie_only=? WHERE id=?')
+    .run(sku, name, category, unit, price, svc ? 0 : cost, svc ? 0 : reorderLevel, svc, color || null, density || null, length || null, freebieOnly, p.id);
   logAudit({ branchId, employeeId: actorId, action: 'Edit product', details: `${name} (${sku}) updated` });
   res.json({ ok: true });
 });
@@ -463,6 +452,12 @@ app.post('/api/sales', (req, res) => {
   db.prepare('UPDATE counters SET value=? WHERE name=?').run(nextSeq, 'receipt_seq');
   const seq = 'EBP-' + String(nextSeq).padStart(6, '0');
 
+  // Safety net: freebie-only products (e.g. giveaway wig caps) can never be charged,
+  // even if a client bug or tampered request tries to sell one at full price.
+  items.forEach(it => {
+    const p = db.prepare('SELECT is_freebie_only FROM products WHERE id=?').get(it.productId);
+    if (p && p.is_freebie_only) it.isFreebie = true;
+  });
   const disc = Number(discount) || 0;
   const subtotal = items.reduce((a, it) => a + (it.isFreebie ? 0 : it.price * it.qty), 0);
   const total = Math.max(0, subtotal - disc);

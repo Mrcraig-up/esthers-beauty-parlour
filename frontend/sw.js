@@ -3,7 +3,7 @@
 // Never touches /api/* calls — those are handled by the app's own
 // offline sales queue in index.html, not by this service worker.
 
-const CACHE_NAME = 'ebp-shell-v1';
+const CACHE_NAME = 'ebp-shell-v2';
 const SHELL_FILES = [
   './',
   './index.html',
@@ -12,6 +12,8 @@ const SHELL_FILES = [
   './icon-512.png',
   './icon-maskable-512.png',
   './apple-touch-icon.png',
+  './logo-full.png',
+  './logo-emblem.png',
 ];
 
 self.addEventListener('install', (event) => {
