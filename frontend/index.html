@@ -961,7 +961,7 @@ document.getElementById('modal-bg').addEventListener('click', (e)=>{ if(e.target
 
 /* ---------------- INIT ---------------- */
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(()=>{}); });
+  window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch((err)=>console.warn('SW registration failed', err)); });
 }
 (async function init(){
   updateConnStatus();

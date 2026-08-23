@@ -3,7 +3,7 @@
 // Never touches /api/* calls — those are handled by the app's own
 // offline sales queue in index.html, not by this service worker.
 
-const CACHE_NAME = 'ebp-shell-v2';
+const CACHE_NAME = 'ebp-shell-v3';
 const SHELL_FILES = [
   './',
   './index.html',
@@ -19,7 +19,17 @@ const SHELL_FILES = [
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(SHELL_FILES))
+      .then((cache) => {
+        // Cache each file independently — cache.addAll() aborts the ENTIRE
+        // install if even one file 404s, which silently disables offline
+        // mode completely. Caching one-by-one means a single missing file
+        // (e.g. a renamed icon) can't take the whole app shell down with it.
+        return Promise.allSettled(
+          SHELL_FILES.map((file) =>
+            cache.add(file).catch((err) => console.warn('[sw] failed to cache', file, err))
+          )
+        );
+      })
       .then(() => self.skipWaiting())
   );
 });

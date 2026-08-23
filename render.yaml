@@ -1,15 +1,14 @@
+# Database lives on Supabase Postgres now — persistent by default, free,
+# no Render disk needed. Set DATABASE_URL in the Render dashboard
+# (Environment tab) rather than here, so the password never sits in GitHub.
 services:
   - type: web
     name: esthers-beauty-parlour
     runtime: node
-    plan: starter
+    plan: free
     rootDir: backend
     buildCommand: npm install
     startCommand: npm start
     envVars:
-      - key: DB_PATH
-        value: /data/esthers.db
-    disk:
-      name: esthers-data
-      mountPath: /data
-      sizeGB: 1
+      - key: DATABASE_URL
+        sync: false
