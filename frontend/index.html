@@ -225,6 +225,7 @@ let session = null;         // {employeeId, workId, name, role, branchId, isAdmi
 let CACHE = { branches: [], employees: [], products: [], stock: {}, stockRequests: [], audit: [], categories: [], returns: [], settings: {fxCurrency:'ZiG', fxRate:0} };
 let posCart = [];
 let posCategory = "All";
+let posSubcategory = "All";
 let currentTab = "dashboard";
 let loginFails = 0;
 let pendingSales = JSON.parse(localStorage.getItem('ebp_pending_sales') || '[]');
@@ -477,6 +478,8 @@ function bindDashboard(){
 let freebieMode = false;
 function renderPOS(){
   const cats = (CACHE.categories||[]).map(c=>c.name);
+  const subcats = posCategory!=='All' ? CACHE.products.filter(p=>p.category===posCategory && p.subcategory).map(p=>p.subcategory) : [];
+  const uniqueSubcats = [...new Set(subcats)];
   const fx = CACHE.settings || {fxCurrency:'ZiG', fxRate:0};
   return `
   <div class="topbar"><h1>Sales Till</h1><span class="branchtag">${branchName(session.branchId)}</span></div>
@@ -487,6 +490,10 @@ function renderPOS(){
         <div class="catchip ${posCategory==='All'?'active':''}" data-cat="All">All</div>
         ${cats.map(c=>`<div class="catchip ${posCategory===c?'active':''}" data-cat="${c}">${c}</div>`).join('')}
       </div>
+      ${uniqueSubcats.length ? `<div class="pos-search" style="margin-top:-6px;">
+        <div class="catchip ${posSubcategory==='All'?'active':''}" data-subcat="All" style="font-size:10.5px;padding:4px 10px;">All ${posCategory}</div>
+        ${uniqueSubcats.map(s=>`<div class="catchip ${posSubcategory===s?'active':''}" data-subcat="${s}" style="font-size:10.5px;padding:4px 10px;">${s}</div>`).join('')}
+      </div>` : ''}
       <div class="prod-grid" id="prod-grid"></div>
     </div>
     <div class="cart">
@@ -527,6 +534,7 @@ function posFilteredProducts(){
     if (freebieMode) { if (!p.isFreebieOnly) return false; }
     else { if (p.isFreebieOnly) return false; }
     if(posCategory!=='All' && p.category!==posCategory) return false;
+    if(posCategory!=='All' && posSubcategory!=='All' && p.subcategory!==posSubcategory) return false;
     if(q && !(p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q))) return false;
     return true;
   });
@@ -609,8 +617,9 @@ function renderCart(){
 function bindPOS(){
   renderProdGrid(); renderCart();
   document.getElementById('pos-search-input').oninput = renderProdGrid;
-  document.querySelectorAll('.catchip').forEach(c=> c.onclick = ()=>{ posCategory=c.dataset.cat; document.getElementById('main').innerHTML = renderPOS(); bindPOS(); });
-  document.getElementById('clear-cart-btn').onclick = ()=>{ posCart=[]; checkoutState = { discount:0, paymentMethod:'Cash', amountReceived:null, currency:'USD' }; document.getElementById('main').innerHTML = renderPOS(); bindPOS(); };
+  document.querySelectorAll('[data-cat]').forEach(c=> c.onclick = ()=>{ posCategory=c.dataset.cat; posSubcategory='All'; document.getElementById('main').innerHTML = renderPOS(); bindPOS(); });
+  document.querySelectorAll('[data-subcat]').forEach(c=> c.onclick = ()=>{ posSubcategory=c.dataset.subcat; document.getElementById('main').innerHTML = renderPOS(); bindPOS(); });
+  document.getElementById('clear-cart-btn').onclick = ()=>{ posCart=[]; checkoutState = { discount:0, paymentMethod:'Cash', amountReceived:null, currency:'USD' }; posSubcategory='All'; document.getElementById('main').innerHTML = renderPOS(); bindPOS(); };
   document.getElementById('checkout-btn').onclick = doCheckout;
   document.getElementById('add-freebie-btn').onclick = ()=>{
     freebieMode = !freebieMode;
@@ -618,7 +627,7 @@ function bindPOS(){
     btn.textContent = freebieMode ? '★ Tap an item below to give it free' : '+ Add Freebie';
     btn.style.background = freebieMode ? 'var(--gold)' : '';
     btn.style.color = freebieMode ? '#fff' : '';
-    posCategory = 'All';
+    posCategory = 'All'; posSubcategory = 'All';
     document.getElementById('main').innerHTML = renderPOS(); bindPOS();
   };
   const discInput = document.getElementById('pos-discount');
@@ -696,7 +705,7 @@ function renderInventory(){
         ? `<span class="tag cat">Service</span>`
         : `${q} ${p.unit} ${low?'<span class="tag low">Low</span>':'<span class="tag ok">OK</span>'}`;
       const attrs = [p.color, p.density, p.length].filter(Boolean).join(' · ') || '—';
-      return `<tr><td class="mono">${p.sku}</td><td>${p.name}</td><td><span class="tag cat">${p.category}</span></td>
+      return `<tr><td class="mono">${p.sku}</td><td>${p.name}</td><td><span class="tag cat">${p.category}</span>${p.subcategory?` <span class="tag cat" style="background:var(--blush-deep);">${p.subcategory}</span>`:''}</td>
         <td style="color:var(--steel);font-size:12px;">${attrs}</td>
         <td>${stockCell}</td>
         <td>${money(p.price)} /${p.unit}</td><td>${p.isService?'—':money(p.cost)+' /'+p.unit}</td>
@@ -720,6 +729,7 @@ function openProductModal(prodId){
     <div class="field"><label>Product / Service Name</label><input id="pf-name" value="${p?p.name:''}"></div>
     <div class="row2"><div class="field"><label>SKU</label><input id="pf-sku" value="${p?p.sku:''}"></div>
       <div class="field"><label>Category</label><input id="pf-cat" value="${p?p.category:''}" placeholder="Type a category name"></div></div>
+    <div class="field"><label>Subcategory (optional)</label><input id="pf-subcat" value="${p&&p.subcategory?p.subcategory:''}" placeholder="e.g. Vietnamese, Brazilian"></div>
     <div class="row2"><div class="field"><label>Unit</label><select id="pf-unit">${UNITS.map(u=>`<option value="${u}" ${p&&p.unit===u?'selected':''}>${u}</option>`).join('')}</select></div>
       <div class="field" id="pf-reorder-wrap"><label>Reorder Level</label><input id="pf-reorder" type="number" value="${p?p.reorderLevel:5}"></div></div>
     <div class="row3" id="pf-attrs-wrap"><div class="field"><label>Colour</label><input id="pf-color" value="${p&&p.color?p.color:''}" placeholder="e.g. Natural Black"></div>
@@ -749,10 +759,11 @@ function openProductModal(prodId){
     const name = document.getElementById('pf-name').value.trim();
     const sku = document.getElementById('pf-sku').value.trim();
     const category = document.getElementById('pf-cat').value.trim();
+    const subcategory = document.getElementById('pf-subcat').value.trim() || null;
     if (!name || !sku || !category) return;
     const isService = document.getElementById('pf-isservice').checked;
     const isFreebieOnly = document.getElementById('pf-isfreebie').checked;
-    const body = { name, sku, category, unit: document.getElementById('pf-unit').value,
+    const body = { name, sku, category, subcategory, unit: document.getElementById('pf-unit').value,
       reorderLevel: Number(document.getElementById('pf-reorder').value)||0, price: Number(document.getElementById('pf-price').value)||0,
       cost: Number(document.getElementById('pf-cost').value)||0, isService, isFreebieOnly,
       color: document.getElementById('pf-color').value.trim() || null, density: document.getElementById('pf-density').value.trim() || null, length: document.getElementById('pf-length').value.trim() || null,
