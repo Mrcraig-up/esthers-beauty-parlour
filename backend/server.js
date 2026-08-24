@@ -43,7 +43,7 @@ async function ensureSchema() {
     );
     CREATE TABLE IF NOT EXISTS products(
       id TEXT PRIMARY KEY, sku TEXT UNIQUE NOT NULL, name TEXT NOT NULL,
-      category TEXT NOT NULL, unit TEXT NOT NULL,
+      category TEXT NOT NULL, subcategory TEXT, unit TEXT NOT NULL,
       price DOUBLE PRECISION NOT NULL, cost DOUBLE PRECISION NOT NULL, reorder_level DOUBLE PRECISION NOT NULL,
       is_service BOOLEAN NOT NULL DEFAULT FALSE,
       color TEXT, density TEXT, length TEXT,
@@ -85,6 +85,10 @@ async function ensureSchema() {
     CREATE TABLE IF NOT EXISTS categories(
       id TEXT PRIMARY KEY, name TEXT UNIQUE NOT NULL
     );
+    CREATE TABLE IF NOT EXISTS subcategories(
+      id TEXT PRIMARY KEY, category TEXT NOT NULL, name TEXT NOT NULL,
+      UNIQUE(category, name)
+    );
     CREATE TABLE IF NOT EXISTS returns(
       id TEXT PRIMARY KEY, branch_id TEXT NOT NULL, product_id TEXT NOT NULL,
       qty DOUBLE PRECISION NOT NULL, reason TEXT, sale_id TEXT, refund_amount DOUBLE PRECISION,
@@ -94,6 +98,8 @@ async function ensureSchema() {
       key TEXT PRIMARY KEY, value TEXT
     );
   `);
+  // Migration for databases created before subcategories existed.
+  await pool.query('ALTER TABLE products ADD COLUMN IF NOT EXISTS subcategory TEXT;');
 }
 
 /* ---------------- SEED (first run only) ---------------- */
@@ -260,6 +266,40 @@ app.delete('/api/categories/:id', ah(async (req, res) => {
   res.json({ ok: true });
 }));
 
+/* ---------------- SUBCATEGORIES ---------------- */
+// Free-text, user-created, scoped to a parent category — same self-serve
+// pattern as categories themselves, so nobody has to wait on a preset list.
+app.get('/api/subcategories', ah(async (req, res) => {
+  const { category } = req.query;
+  const { rows } = category
+    ? await pool.query('SELECT * FROM subcategories WHERE category=$1 ORDER BY name', [category])
+    : await pool.query('SELECT * FROM subcategories ORDER BY category, name');
+  res.json(rows.map(s => ({ id: s.id, category: s.category, name: s.name })));
+}));
+app.post('/api/subcategories', ah(async (req, res) => {
+  const { category, name, actorId } = req.body || {};
+  if (!category || !name || !name.trim()) return res.status(400).json({ error: 'Category and subcategory name are required.' });
+  const exists = await pool.query('SELECT 1 FROM subcategories WHERE category=$1 AND LOWER(name)=LOWER($2)', [category, name.trim()]);
+  if (exists.rowCount > 0) return res.status(409).json({ error: 'That subcategory already exists.' });
+  const id = uid('subcat');
+  await pool.query('INSERT INTO subcategories(id,category,name) VALUES ($1,$2,$3)', [id, category, name.trim()]);
+  await logAudit({ employeeId: actorId, action: 'Add subcategory', details: `"${name.trim()}" added under "${category}"` });
+  res.json({ id, category, name: name.trim() });
+}));
+app.delete('/api/subcategories/:id', ah(async (req, res) => {
+  const { actorId } = req.body || {};
+  const actor = await getEmployee(actorId);
+  if (!actor || actor.role !== 'Administrator') return res.status(403).json({ error: 'Only the Administrator can remove subcategories.' });
+  const { rows } = await pool.query('SELECT * FROM subcategories WHERE id=$1', [req.params.id]);
+  const sub = rows[0];
+  if (!sub) return res.status(404).json({ error: 'Not found.' });
+  const { rows: [{ count }] } = await pool.query('SELECT COUNT(*)::int AS count FROM products WHERE category=$1 AND subcategory=$2', [sub.category, sub.name]);
+  if (count > 0) return res.status(409).json({ error: `${count} product(s) still use this subcategory.` });
+  await pool.query('DELETE FROM subcategories WHERE id=$1', [sub.id]);
+  await logAudit({ employeeId: actorId, action: 'Remove subcategory', details: `"${sub.name}" removed from "${sub.category}"` });
+  res.json({ ok: true });
+}));
+
 /* ---------------- SETTINGS (foreign currency) ---------------- */
 app.get('/api/settings', ah(async (req, res) => {
   const { rows } = await pool.query('SELECT * FROM settings');
@@ -325,24 +365,29 @@ app.get('/api/reports/sales', ah(async (req, res) => {
 app.get('/api/products', ah(async (req, res) => {
   const { rows } = await pool.query('SELECT * FROM products');
   res.json(rows.map(p => ({
-    id: p.id, sku: p.sku, name: p.name, category: p.category, unit: p.unit,
+    id: p.id, sku: p.sku, name: p.name, category: p.category, subcategory: p.subcategory, unit: p.unit,
     price: p.price, cost: p.cost, reorderLevel: p.reorder_level, isService: p.is_service,
     color: p.color, density: p.density, length: p.length, isFreebieOnly: p.is_freebie_only
   })));
 }));
 app.post('/api/products', ah(async (req, res) => {
-  const { sku, name, category, unit, price, cost, reorderLevel, openingStock, isService, color, density, length, isFreebieOnly, branchId, actorId } = req.body || {};
+  const { sku, name, category, subcategory, unit, price, cost, reorderLevel, openingStock, isService, color, density, length, isFreebieOnly, branchId, actorId } = req.body || {};
   if (!sku || !name || !category || !unit) return res.status(400).json({ error: 'Missing fields.' });
   const exists = await pool.query('SELECT 1 FROM products WHERE LOWER(sku)=LOWER($1)', [sku]);
   if (exists.rowCount > 0) return res.status(409).json({ error: 'That SKU already exists.' });
   const catExists = await pool.query('SELECT 1 FROM categories WHERE name=$1', [category]);
   if (catExists.rowCount === 0) await pool.query('INSERT INTO categories(id,name) VALUES ($1,$2)', [uid('cat'), category]);
+  const subcat = (subcategory || '').trim() || null;
+  if (subcat) {
+    const subExists = await pool.query('SELECT 1 FROM subcategories WHERE category=$1 AND LOWER(name)=LOWER($2)', [category, subcat]);
+    if (subExists.rowCount === 0) await pool.query('INSERT INTO subcategories(id,category,name) VALUES ($1,$2,$3)', [uid('subcat'), category, subcat]);
+  }
   const id = uid('prod');
   const svc = !!isService;
   const freebieOnly = (!svc && !!isFreebieOnly);
   await pool.query(
-    'INSERT INTO products(id,sku,name,category,unit,price,cost,reorder_level,is_service,color,density,length,is_freebie_only) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)',
-    [id, sku, name, category, unit, price || 0, svc ? 0 : (cost || 0), svc ? 0 : (reorderLevel || 0), svc, color || null, density || null, length || null, freebieOnly]
+    'INSERT INTO products(id,sku,name,category,subcategory,unit,price,cost,reorder_level,is_service,color,density,length,is_freebie_only) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)',
+    [id, sku, name, category, subcat, unit, price || 0, svc ? 0 : (cost || 0), svc ? 0 : (reorderLevel || 0), svc, color || null, density || null, length || null, freebieOnly]
   );
   if (!svc) {
     const { rows: branches } = await pool.query('SELECT id FROM branches');
@@ -351,19 +396,24 @@ app.post('/api/products', ah(async (req, res) => {
     }
   }
   await logAudit({ branchId, employeeId: actorId, action: svc ? 'Add service' : 'Add product', details: `${name} (${sku}) added${svc ? '' : `, opening stock ${openingStock || 0} ${unit}`}${freebieOnly ? ' — freebie-only item' : ''}` });
-  res.json({ id, sku, name, category, unit, price, cost, reorderLevel, isService: svc, color, density, length, isFreebieOnly: freebieOnly });
+  res.json({ id, sku, name, category, subcategory: subcat, unit, price, cost, reorderLevel, isService: svc, color, density, length, isFreebieOnly: freebieOnly });
 }));
 app.put('/api/products/:id', ah(async (req, res) => {
-  const { sku, name, category, unit, price, cost, reorderLevel, isService, color, density, length, isFreebieOnly, actorId, branchId } = req.body || {};
+  const { sku, name, category, subcategory, unit, price, cost, reorderLevel, isService, color, density, length, isFreebieOnly, actorId, branchId } = req.body || {};
   const p = await getProduct(req.params.id);
   if (!p) return res.status(404).json({ error: 'Not found.' });
   const catExists = await pool.query('SELECT 1 FROM categories WHERE name=$1', [category]);
   if (catExists.rowCount === 0) await pool.query('INSERT INTO categories(id,name) VALUES ($1,$2)', [uid('cat'), category]);
+  const subcat = (subcategory || '').trim() || null;
+  if (subcat) {
+    const subExists = await pool.query('SELECT 1 FROM subcategories WHERE category=$1 AND LOWER(name)=LOWER($2)', [category, subcat]);
+    if (subExists.rowCount === 0) await pool.query('INSERT INTO subcategories(id,category,name) VALUES ($1,$2,$3)', [uid('subcat'), category, subcat]);
+  }
   const svc = !!isService;
   const freebieOnly = (!svc && !!isFreebieOnly);
   await pool.query(
-    'UPDATE products SET sku=$1,name=$2,category=$3,unit=$4,price=$5,cost=$6,reorder_level=$7,is_service=$8,color=$9,density=$10,length=$11,is_freebie_only=$12 WHERE id=$13',
-    [sku, name, category, unit, price, svc ? 0 : cost, svc ? 0 : reorderLevel, svc, color || null, density || null, length || null, freebieOnly, p.id]
+    'UPDATE products SET sku=$1,name=$2,category=$3,subcategory=$4,unit=$5,price=$6,cost=$7,reorder_level=$8,is_service=$9,color=$10,density=$11,length=$12,is_freebie_only=$13 WHERE id=$14',
+    [sku, name, category, subcat, unit, price, svc ? 0 : cost, svc ? 0 : reorderLevel, svc, color || null, density || null, length || null, freebieOnly, p.id]
   );
   await logAudit({ branchId, employeeId: actorId, action: 'Edit product', details: `${name} (${sku}) updated` });
   res.json({ ok: true });
