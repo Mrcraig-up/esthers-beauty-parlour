@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Esthers Beauty Parlour — Stock &amp; Till</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#2B2722">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Esthers EBP">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{ --gold:#B8924A; --gold-hover:#A17E3A; --gold-money:#9C7A1F; --gold-money-hover:#7F6419; --ink:#3D3038; --steel:#8A7A80; --concrete:#FFFEFA; --panel:#FFFFFF; --blush:#F7EAE7; --blush-deep:#F1DCD9; --line:#EFE1D8; --good:#2E7D46; --bad:#C13B2A; --warn:#B6790A; --radius:14px; }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--concrete);color:var(--ink);font-family:'Inter',sans-serif;}
+  h1,h2,h3{font-family:'Playfair Display',serif;font-weight:600;letter-spacing:.01em;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  .hazard{height:4px;background:linear-gradient(90deg,var(--gold-hover),var(--gold),var(--blush-deep),var(--gold));}
+  #login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;background:linear-gradient(160deg,var(--blush) 0%,#FFFEFA 55%);color:var(--ink);padding:24px;}
+  #login-screen .hazard{position:fixed;top:0;left:0;right:0;}
+  .brand-logo{width:100%;max-width:280px;height:auto;margin-bottom:6px;}
+  .brand-sub{color:var(--steel);font-size:12.5px;letter-spacing:.2em;margin-bottom:28px;text-transform:uppercase;}
+  .login-card{background:#fff;border:1px solid var(--line);box-shadow:0 10px 34px rgba(184,146,74,.14);border-radius:20px;padding:30px;width:100%;max-width:360px;}
+  .login-card label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--steel);margin:14px 0 6px;}
+  .login-card select, .login-card input{width:100%;padding:11px 13px;border-radius:11px;border:1px solid var(--line);background:#FCFAF6;color:var(--ink);font-size:15px;font-family:inherit;}
+  .login-card .hint{color:var(--steel);font-size:11.5px;margin-top:6px;}
+  .btn{cursor:pointer;border:none;border-radius:999px;padding:11px 20px;font-family:'Inter',sans-serif;text-transform:uppercase;letter-spacing:.06em;font-size:12.5px;font-weight:700;transition:.15s;}
+  .btn-yellow{background:var(--gold);color:#fff;} .btn-yellow:hover{background:var(--gold-hover);}
+  .btn-money{background:var(--gold-money);color:#fff;} .btn-money:hover{background:var(--gold-money-hover);}
+  .btn-outline{background:transparent;border:1px solid var(--line);color:var(--ink);}
+  .btn-outline:hover{border-color:var(--gold);color:var(--gold-money);}
+  .btn-danger{background:var(--bad);color:#fff;}
+  .btn:disabled{opacity:.4;cursor:not-allowed;}
+  #login-btn{width:100%;margin-top:22px;padding:13px;}
+  #login-err{color:var(--bad);font-size:13px;margin-top:10px;min-height:16px;}
+  .apicfg{margin-top:22px;font-size:11px;color:var(--steel);text-align:center;cursor:pointer;text-decoration:underline;}
+  #app{display:none;min-height:100vh;grid-template-columns:230px 1fr;}
+  #app.show{display:grid;}
+  #sidebar{background:#fff;border-right:1px solid var(--line);color:var(--ink);padding:22px 0;display:flex;flex-direction:column;}
+  #sidebar .brand2-logo{display:block;width:150px;height:auto;margin:0 auto 4px;}
+  #sidebar .brand2-sub{padding:0 22px;color:var(--steel);font-size:10px;letter-spacing:.18em;margin-bottom:22px;text-transform:uppercase;text-align:center;}
+  #sidebar nav{flex:1;}
+  #sidebar button.navlink{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:none;color:var(--steel);padding:11px 22px;font-family:'Inter',sans-serif;font-weight:600;text-transform:uppercase;font-size:12px;letter-spacing:.04em;cursor:pointer;border-left:3px solid transparent;}
+  #sidebar button.navlink:hover{color:var(--ink);background:var(--blush);}
+  #sidebar button.navlink.active{color:var(--gold-money);border-left-color:var(--gold);background:var(--blush);}
+  #sidebar button.navlink .cnt{margin-left:auto;background:var(--bad);color:#fff;font-size:10px;border-radius:10px;padding:1px 6px;}
+  #sidebar .who{padding:16px 22px;border-top:1px solid var(--line);font-size:12px;color:var(--steel);}
+  #sidebar .who b{color:var(--ink);display:block;font-size:14px;}
+  #sidebar .who .wid{font-family:'IBM Plex Mono',monospace;color:var(--steel);}
+  #sidebar .branchswitch{margin:8px 22px 0;}
+  #sidebar .branchswitch select{width:100%;background:#FCFAF6;color:var(--ink);border:1px solid var(--gold);font-size:12px;padding:7px 9px;border-radius:10px;}
+  #sidebar .logout{margin:12px 22px 0;font-size:11px;color:var(--bad);background:none;border:none;cursor:pointer;text-transform:uppercase;letter-spacing:.08em;padding:0;font-weight:700;}
+  #main{padding:28px 34px;overflow-x:hidden;}
+  .topbar{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:22px;flex-wrap:wrap;gap:10px;}
+  .topbar h1{font-size:27px;margin:0;color:var(--ink);}
+  .topbar .branchtag{background:var(--blush);color:var(--gold-money);font-size:11px;padding:5px 12px;border-radius:999px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:26px;}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:17px 19px;position:relative;overflow:hidden;box-shadow:0 3px 14px rgba(184,146,74,.05);}
+  .card:before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--gold);}
+  .card .label{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--steel);margin-bottom:6px;}
+  .card .val{font-family:'Playfair Display',serif;font-size:27px;font-weight:600;}
+  .card.bad:before{background:var(--bad);} .card.bad .val{color:var(--bad);}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px;margin-bottom:20px;box-shadow:0 3px 14px rgba(184,146,74,.05);}
+  .panel h3{font-size:16px;margin:0 0 14px;color:var(--gold-money);}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;}
+  th{text-align:left;font-family:'Inter',sans-serif;font-weight:700;text-transform:uppercase;font-size:10.5px;letter-spacing:.05em;color:var(--steel);border-bottom:2px solid var(--blush-deep);padding:9px 10px;}
+  td{padding:10px 10px;border-bottom:1px solid var(--line);}
+  tr:hover td{background:var(--blush);}
+  .tag{display:inline-block;font-size:10.5px;padding:2px 9px;border-radius:20px;text-transform:uppercase;letter-spacing:.04em;font-weight:700;}
+  .tag.ok{background:#e4f3e8;color:var(--good);} .tag.low{background:#fdeeea;color:var(--bad);} .tag.cat{background:var(--blush);color:var(--gold-money);}
+  .tag.pending{background:#fdf1d6;color:var(--warn);} .tag.confirmed{background:#e4f3e8;color:var(--good);} .tag.rejected{background:#fdeeea;color:var(--bad);}
+  input, select, textarea{font-family:inherit;font-size:14px;padding:9px 11px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);}
+  input:focus, select:focus, textarea:focus{outline:none;border-color:var(--gold);}
+  .field{margin-bottom:12px;}
+  .field label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--steel);margin-bottom:5px;}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+  .pos-wrap{display:grid;grid-template-columns:1fr 340px;gap:18px;align-items:start;}
+  .pos-search{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
+  .pos-search input{flex:1;min-width:160px;}
+  .catchip{border:1px solid var(--line);background:#fff;padding:6px 13px;border-radius:999px;font-size:12px;cursor:pointer;text-transform:uppercase;letter-spacing:.03em;font-weight:600;color:var(--ink);}
+  .catchip.active{background:var(--gold);color:#fff;border-color:var(--gold);}
+  .prod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(108px,1fr));gap:8px;max-height:560px;overflow-y:auto;padding-right:4px;}
+  .prod-card{background:#fff;border:1px solid var(--line);border-radius:11px;padding:9px 10px;cursor:pointer;transition:.12s;}
+  .prod-card:hover{border-color:var(--gold);box-shadow:0 4px 14px rgba(184,146,74,.15);transform:translateY(-1px);}
+  .prod-card .pname{font-weight:600;font-size:11.5px;margin-bottom:3px;line-height:1.25;min-height:28px;}
+  .prod-card .pattrs{font-size:10.5px;color:var(--steel);margin-bottom:2px;}
+  .prod-card .psku{font-size:10.5px;color:var(--steel);font-family:'IBM Plex Mono',monospace;}
+  .prod-card .pprice{font-family:'Playfair Display',serif;color:var(--gold-money);font-size:13.5px;font-weight:600;}
+  .prod-card .pstock{font-size:10px;margin-top:2px;}
+  .prod-card.nostock{opacity:.45;cursor:not-allowed;}
+  .cart{background:#fff;border:1px solid var(--gold);color:var(--ink);border-radius:18px;padding:18px;position:sticky;top:16px;box-shadow:0 8px 26px rgba(184,146,74,.12);}
+  .cart h3{color:var(--gold-money);margin:0 0 10px;font-size:17px;}
+  .cart-item{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--line);font-size:13px;gap:6px;}
+  .cart-item .ci-name{flex:1;}
+  .cart-item .ci-qty{display:flex;align-items:center;gap:6px;}
+  .cart-item .ci-qty button{background:var(--blush);color:var(--gold-money);border:none;width:22px;height:22px;border-radius:999px;cursor:pointer;font-weight:700;}
+  .cart-total{display:flex;justify-content:space-between;padding:14px 0 6px;font-family:'Playfair Display',serif;font-size:20px;border-top:2px solid var(--gold-money);margin-top:8px;color:var(--gold-money);}
+  .cart-subline{display:flex;justify-content:space-between;font-size:12.5px;color:var(--steel);padding:2px 0;}
+  .cart-empty{color:var(--steel);font-size:13px;padding:20px 0;text-align:center;}
+  .modal-bg{display:none;position:fixed;inset:0;background:rgba(61,48,56,.45);align-items:center;justify-content:center;z-index:50;padding:16px;}
+  .modal-bg.show{display:flex;}
+  .modal{background:#fff;border-radius:20px;padding:26px;width:100%;max-width:460px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(61,48,56,.25);}
+  .modal h3{margin-top:0;color:var(--gold-money);}
+  .modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px;}
+  .receipt{background:#fff;width:300px;padding:18px 16px;font-family:'IBM Plex Mono',monospace;font-size:12px;margin:0 auto;border-left:2px dashed var(--line);border-right:2px dashed var(--line);}
+  .receipt .rhead{text-align:center;margin-bottom:10px;}
+  .receipt .rhead .rb{font-family:'Playfair Display',serif;font-size:16px;color:var(--gold-money);letter-spacing:.02em;font-weight:600;}
+  .receipt hr{border:none;border-top:1px dashed var(--line);margin:8px 0;}
+  .receipt .rline{display:flex;justify-content:space-between;}
+  .receipt .rseq{background:var(--gold);color:#fff;text-align:center;padding:4px 0;font-weight:600;margin:8px 0;letter-spacing:.05em;border-radius:6px;}
+  .toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px;}
+  .search-input{min-width:220px;}
+  .empty-state{padding:40px 20px;text-align:center;color:var(--steel);}
+  .badge-role{font-size:10px;padding:2px 8px;border-radius:999px;background:var(--blush);color:var(--gold-money);text-transform:uppercase;letter-spacing:.04em;font-weight:700;}
+  .toast{position:fixed;bottom:20px;right:20px;background:#fff;color:var(--ink);padding:13px 18px;border-radius:14px;font-size:13px;z-index:100;border-left:4px solid var(--gold);box-shadow:0 8px 24px rgba(61,48,56,.18);display:none;max-width:320px;}
+  .conn-badge{position:fixed;top:12px;right:16px;z-index:60;font-size:10.5px;padding:4px 11px;border-radius:20px;font-family:'Inter',sans-serif;text-transform:uppercase;letter-spacing:.05em;font-weight:700;box-shadow:0 1px 5px rgba(184,146,74,.18);transition:.15s;}
+  .conn-badge.online{background:#e4f3e8;color:var(--good);}
+  .conn-badge.offline{background:#fdeeea;color:var(--bad);}
+  .conn-badge.syncing{background:#fdf1d6;color:var(--warn);}
+  .pay-toggle{display:flex;gap:8px;margin-bottom:12px;}
+  .pay-toggle button{flex:1;padding:10px;border-radius:12px;border:1px solid var(--line);background:#fff;color:var(--ink);cursor:pointer;font-weight:600;font-size:12.5px;text-transform:uppercase;letter-spacing:.04em;}
+  .pay-toggle button.active{background:var(--gold);color:#fff;border-color:var(--gold);}
+  .note-btns{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;}
+  .note-btns button{background:var(--blush);border:1px solid var(--line);color:var(--gold-money);border-radius:999px;padding:5px 11px;font-size:12px;cursor:pointer;font-weight:700;}
+  .freebie-row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 0;border-bottom:1px dashed var(--line);font-size:12.5px;}
+  ::-webkit-scrollbar{width:8px;} ::-webkit-scrollbar-thumb{background:var(--blush-deep);border-radius:4px;}
+
+  /* ---------- RESPONSIVE ---------- */
+  @media(max-width:840px){
+    #app.show{display:block;}
+    #sidebar{position:sticky;top:0;z-index:20;padding:8px 0;}
+    #sidebar nav{display:flex;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+    #sidebar button.navlink{border-left:none;border-bottom:3px solid transparent;white-space:nowrap;padding:12px 14px;}
+    #sidebar button.navlink.active{border-bottom-color:var(--gold);}
+    #sidebar .who,#sidebar .brand2,#sidebar .brand2-sub,#sidebar .branchswitch{display:none;}
+    #main{padding:18px 16px;}
+    .pos-wrap{grid-template-columns:1fr;}
+    .cart{position:static;}
+    .panel{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+    table{min-width:640px;}
+  }
+  @media(max-width:640px){
+    body{-webkit-text-size-adjust:100%;}
+    .conn-badge{top:auto;bottom:14px;right:14px;font-size:10px;padding:4px 10px;}
+    .brand-logo{max-width:200px;}
+    .login-card{padding:20px;max-width:100%;}
+    #login-screen{padding:16px;}
+    .topbar{margin-bottom:16px;}
+    .topbar h1{font-size:20px;}
+    .cards{grid-template-columns:1fr 1fr;gap:10px;}
+    .card{padding:13px 14px;}
+    .card .val{font-size:22px;}
+    .prod-grid{grid-template-columns:repeat(auto-fill,minmax(96px,1fr));max-height:none;gap:6px;}
+    .prod-card{padding:10px;}
+    .prod-card .pname{min-height:auto;font-size:12.5px;}
+    .cart-item .ci-qty button{width:28px;height:28px;font-size:15px;}
+    .row2,.row3{grid-template-columns:1fr;}
+    .modal-bg{padding:0;align-items:flex-end;}
+    .modal{max-width:100%;width:100%;border-radius:18px 18px 0 0;max-height:92vh;padding:20px 18px calc(20px + env(safe-area-inset-bottom));}
+    .toast{left:14px;right:14px;bottom:70px;max-width:none;}
+    .toolbar{flex-direction:column;align-items:stretch;}
+    .search-input{min-width:0;width:100%;}
+    #sidebar button.navlink{padding:11px 12px;font-size:11.5px;}
+  }
+  @media(min-width:1400px){
+    #main{padding:32px 48px;}
+    .prod-grid{grid-template-columns:repeat(auto-fill,minmax(120px,1fr));}
+  }
+</style>
+</head>
+<body>
+
+<div id="conn-status" class="conn-badge"></div>
+
+<div id="login-screen">
+  <div class="hazard"></div>
+  <img src="logo-full.png" alt="Esther's Beauty Parlour — A Queen's Beauty" class="brand-logo">
+  <div class="brand-sub">Wigs &amp; Hair · Stock &amp; Till Control</div>
+  <div class="login-card">
+    <label>Work ID</label>
+    <input id="login-workid" placeholder="e.g. EBP-002" autocomplete="off">
+    <label>Full Name</label>
+    <input id="login-name" placeholder="As assigned by your Administrator" autocomplete="off">
+    <div class="hint">Your Work ID and Name are set up by your Administrator or Branch Manager.</div>
+    <div id="login-err"></div>
+    <button class="btn btn-yellow" id="login-btn">Log In</button>
+  </div>
+  <div class="apicfg" id="apicfg-toggle">Server: <span id="apicfg-val" class="mono"></span> (change)</div>
+</div>
+
+<div id="app">
+  <div id="sidebar">
+    <img src="logo-emblem.png" alt="Esther's Beauty Parlour" class="brand2-logo">
+    <div class="brand2-sub">Stock &amp; Till</div>
+    <nav id="navlinks"></nav>
+    <div class="branchswitch" id="branchswitch-wrap" style="display:none;"><select id="branchswitch"></select></div>
+    <div class="who"><b id="who-name"></b><span class="wid" id="who-id"></span><br><span id="who-role"></span> · <span id="who-branch"></span></div>
+    <button class="logout" id="backup-btn" style="display:none;color:var(--gold);margin-top:8px;">⬇ Download Backup</button>
+    <button class="logout" id="logout-btn">Log Out</button>
+  </div>
+  <div id="main"></div>
+</div>
+
+<div class="modal-bg" id="modal-bg"><div class="modal" id="modal-body"></div></div>
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+const UNITS = ["piece","pack","bundle","set","box","unit","session"];
+const NOTE_SIZES = [1,2,5,10,20,50,100];
+
+let API_BASE = localStorage.getItem('ebp_api_base') || window.location.origin;
+document.getElementById('apicfg-val').textContent = API_BASE;
+document.getElementById('apicfg-toggle').onclick = () => {
+  const v = prompt('Backend server URL:', API_BASE);
+  if (v) { API_BASE = v.replace(/\/$/, ''); localStorage.setItem('ebp_api_base', API_BASE); document.getElementById('apicfg-val').textContent = API_BASE; }
+};
+
+let session = null;         // {employeeId, workId, name, role, branchId, isAdmin}
+let CACHE = { branches: [], employees: [], products: [], stock: {}, stockRequests: [], audit: [], categories: [], returns: [], settings: {fxCurrency:'ZiG', fxRate:0} };
+let posCart = [];
+let posCategory = "All";
+let posSubcategory = "All";
+let currentTab = "dashboard";
+let loginFails = 0;
+let pendingSales = JSON.parse(localStorage.getItem('ebp_pending_sales') || '[]');
+let syncingSales = false;
+let checkoutState = { discount: 0, paymentMethod: 'Cash', amountReceived: null, currency: 'USD' };
+
+function money(n){ return "$" + Number(n||0).toFixed(2); }
+function fmtDT(d){ d=new Date(d); return d.toLocaleDateString() + " " + d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}); }
+function toast(msg){ const t = document.getElementById('toast'); t.textContent = msg; t.style.display='block'; clearTimeout(t._h); t._h = setTimeout(()=> t.style.display='none', 3500); }
+
+/* ---------------- OFFLINE SUPPORT ---------------- */
+function savePendingSales(){ localStorage.setItem('ebp_pending_sales', JSON.stringify(pendingSales)); }
+function saveOfflineCache(){ try { localStorage.setItem('ebp_offline_cache', JSON.stringify({ session, CACHE, savedAt: Date.now() })); } catch(e){} }
+function loadOfflineCache(){
+  try {
+    const raw = localStorage.getItem('ebp_offline_cache');
+    if (!raw) return false;
+    const d = JSON.parse(raw);
+    if (!d.CACHE) return false;
+    CACHE = d.CACHE;
+    return true;
+  } catch(e){ return false; }
+}
+function setConnBadge(state, text){
+  const el = document.getElementById('conn-status'); if(!el) return;
+  el.className = 'conn-badge ' + state;
+  el.textContent = text;
+}
+function updateConnStatus(){
+  const online = navigator.onLine;
+  const pend = pendingSales.length;
+  if (!online) setConnBadge('offline', pend ? `Offline · ${pend} pending sale${pend>1?'s':''}` : 'Offline — using saved data');
+  else if (pend) setConnBadge('syncing', `Syncing ${pend} sale${pend>1?'s':''}…`);
+  else setConnBadge('online', 'Online');
+}
+function queueOfflineSale(items, saleBody){
+  saleBody = saleBody || { branchId: session.branchId, employeeId: session.employeeId, items, discount:0, paymentMethod:'Cash', amountReceived:null, currency:'USD' };
+  const subtotal = items.reduce((a,it)=>a + (it.isFreebie?0:it.price*it.qty), 0);
+  const discount = Math.min(subtotal, saleBody.discount||0);
+  const total = Math.max(0, subtotal - discount);
+  const seq = 'OFFLINE-' + String(pendingSales.length+1).padStart(4,'0');
+  let changeDue = null;
+  if (saleBody.paymentMethod==='Cash' && saleBody.amountReceived!=null) {
+    const fx = CACHE.settings || {fxRate:0};
+    const receivedUsd = (saleBody.currency==='LOCAL' && fx.fxRate>0) ? saleBody.amountReceived / fx.fxRate : saleBody.amountReceived;
+    changeDue = receivedUsd - total;
+  }
+  const saleRecord = Object.assign({}, saleBody, { localId:'off_'+Math.random().toString(36).slice(2,10), total, subtotal, discount, changeDue, timestamp: Date.now(), seq });
+  pendingSales.push(saleRecord); savePendingSales();
+  items.forEach(it=>{ const p = CACHE.products.find(x=>x.id===it.productId); if (p && !p.isService) CACHE.stock[it.productId] = Math.max(0,(CACHE.stock[it.productId]||0) - it.qty); });
+  saveOfflineCache();
+  posCart = []; checkoutState = { discount:0, paymentMethod:'Cash', amountReceived:null, currency:'USD' };
+  showReceipt(saleRecord, true);
+  if (currentTab==='pos') { document.getElementById('main').innerHTML = renderPOS(); bindPOS(); }
+  updateConnStatus();
+  toast('No connection — sale saved on this device and will sync automatically once you\'re back online.');
+}
+async function syncPendingSales(){
+  if (pendingSales.length===0 || !navigator.onLine || !session || syncingSales) return;
+  syncingSales = true;
+  updateConnStatus();
+  const toSync = [...pendingSales];
+  for (const s of toSync) {
+    try {
+      await api('/api/sales', { method:'POST', body:{ branchId:s.branchId, employeeId:s.employeeId, items:s.items, discount:s.discount, paymentMethod:s.paymentMethod, amountReceived:s.amountReceived, currency:s.currency } });
+      pendingSales = pendingSales.filter(p=>p.localId!==s.localId);
+      savePendingSales();
+    } catch(e){ break; } // stop at first failure, keep the rest queued for next attempt
+  }
+  syncingSales = false;
+  try { await refreshCache(); renderNav(); render(); } catch(e){}
+  updateConnStatus();
+  if (pendingSales.length===0 && toSync.length>0) toast('All offline sales have synced.');
+}
+window.addEventListener('online', ()=>{ updateConnStatus(); syncPendingSales(); });
+window.addEventListener('offline', updateConnStatus);
+
+async function api(path, opts) {
+  opts = opts || {};
+  opts.headers = Object.assign({'Content-Type':'application/json'}, opts.headers||{});
+  if (opts.body && typeof opts.body !== 'string') opts.body = JSON.stringify(opts.body);
+  let res;
+  try { res = await fetch(API_BASE + path, opts); }
+  catch(e){ toast('Cannot reach server at ' + API_BASE + '. Check the server URL and that the backend is running.'); throw e; }
+  let data = null;
+  try { data = await res.json(); } catch(e) {}
+  if (!res.ok) { const msg = (data && data.error) || ('Request failed (' + res.status + ')'); toast(msg); throw new Error(msg); }
+  return data;
+}
+
+function empName(id){ const e=CACHE.employees.find(x=>x.id===id); return e?e.name:"—"; }
+function branchName(id){ if(id==='ALL') return 'All Branches'; const b=CACHE.branches.find(x=>x.id===id); return b?b.name:"—"; }
+function pendingCount(){ return CACHE.stockRequests.filter(r=>r.status==='pending').length; }
+
+/* ---------------- LOGIN ---------------- */
+document.getElementById('login-btn').onclick = async () => {
+  const err = document.getElementById('login-err');
+  if (loginFails >= 3) { err.textContent = "Too many failed attempts. Please see your Administrator to confirm your Work ID."; return; }
+  const workId = document.getElementById('login-workid').value.trim();
+  const name = document.getElementById('login-name').value.trim();
+  if (!workId || !name) { err.textContent = "Enter both your Work ID and Name."; return; }
+  try {
+    const { employee } = await api('/api/auth/login', { method:'POST', body:{ workId, name } });
+    loginFails = 0; err.textContent = "";
+    session = { employeeId: employee.id, workId: employee.workId, name: employee.name, role: employee.role,
+                branchId: employee.branchId==='ALL' ? null : employee.branchId, isAdmin: employee.role==='Administrator' };
+    if (session.isAdmin && !session.branchId) { const branches = await api('/api/branches'); session.branchId = branches[0] ? branches[0].id : null; }
+    localStorage.setItem('ebp_session', JSON.stringify(session));
+    await enterApp();
+  } catch(e) {
+    loginFails++;
+    err.textContent = loginFails>=3 ? "Too many failed attempts. Please see your Administrator to confirm your Work ID." : "Work ID and Name don't match our records.";
+  }
+};
+document.getElementById('login-name').addEventListener('keydown', e=>{ if(e.key==='Enter') document.getElementById('login-btn').click(); });
+document.getElementById('login-workid').addEventListener('keydown', e=>{ if(e.key==='Enter') document.getElementById('login-name').focus(); });
+
+/* ---------------- APP SHELL ---------------- */
+const TABS = [
+  {id:'dashboard', label:'Dashboard'}, {id:'pos', label:'Sales Till'}, {id:'inventory', label:'Inventory'},
+  {id:'returns', label:'Returns'}, {id:'reports', label:'Reports'},
+  {id:'confirm', label:'Stock Confirmations'}, {id:'employees', label:'Employees'}, {id:'branches', label:'Branches'}, {id:'audit', label:'Accountability Log'},
+];
+async function refreshCache(){
+  if (!navigator.onLine) { updateConnStatus(); loadOfflineCache(); return; }
+  try {
+    const [branches, employees, products, categories, settings] = await Promise.all([
+      api('/api/branches'), api('/api/employees'), api('/api/products'), api('/api/categories'), api('/api/settings')
+    ]);
+    CACHE.branches = branches; CACHE.employees = employees; CACHE.products = products; CACHE.categories = categories; CACHE.settings = settings;
+    const [stock, stockRequests, audit, returns] = await Promise.all([
+      api('/api/stock?branchId=' + encodeURIComponent(session.branchId)),
+      api('/api/stock-requests?' + (session.isAdmin ? 'all=1' : ('branchId=' + encodeURIComponent(session.branchId)))),
+      api('/api/audit?' + (session.isAdmin ? 'all=1' : ('branchId=' + encodeURIComponent(session.branchId)))),
+      api('/api/returns?' + (session.isAdmin ? 'all=1' : ('branchId=' + encodeURIComponent(session.branchId)))),
+    ]);
+    CACHE.stock = stock; CACHE.stockRequests = stockRequests; CACHE.audit = audit; CACHE.returns = returns;
+    saveOfflineCache();
+    updateConnStatus();
+    if (pendingSales.length) syncPendingSales();
+  } catch(e) {
+    updateConnStatus();
+    if (!loadOfflineCache()) throw e;
+  }
+}
+async function enterApp(){
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app').classList.add('show');
+  try { await refreshCache(); }
+  catch(e){ toast('Could not reach the server and no saved data is available on this device yet. Connect once to load your data offline-ready.'); }
+  document.getElementById('who-name').textContent = session.name;
+  document.getElementById('who-id').textContent = session.workId;
+  document.getElementById('who-role').textContent = session.role;
+  document.getElementById('who-branch').textContent = branchName(session.branchId);
+  const swWrap = document.getElementById('branchswitch-wrap');
+  if (session.isAdmin) {
+    swWrap.style.display = 'block';
+    const sw = document.getElementById('branchswitch');
+    sw.innerHTML = CACHE.branches.map(b=>`<option value="${b.id}" ${b.id===session.branchId?'selected':''}>${b.name}</option>`).join('');
+    sw.onchange = async () => { session.branchId = sw.value; localStorage.setItem('ebp_session', JSON.stringify(session)); document.getElementById('who-branch').textContent = branchName(session.branchId); await refreshCache(); render(); };
+  } else { swWrap.style.display = 'none'; }
+  const backupBtn = document.getElementById('backup-btn');
+  if (session.isAdmin) {
+    backupBtn.style.display = 'block';
+    backupBtn.onclick = () => {
+      if (!navigator.onLine) { toast('You need a connection to download a backup.'); return; }
+      window.location.href = API_BASE + '/api/admin/backup?employeeId=' + encodeURIComponent(session.employeeId) + '&branchId=' + encodeURIComponent(session.branchId);
+    };
+  } else { backupBtn.style.display = 'none'; }
+  renderNav(); currentTab = 'dashboard'; render();
+}
+function renderNav(){
+  document.getElementById('navlinks').innerHTML = TABS.map(t=>{
+    const cnt = t.id==='confirm' ? pendingCount() : 0;
+    return `<button class="navlink" data-tab="${t.id}">${t.label}${cnt?`<span class="cnt">${cnt}</span>`:''}</button>`;
+  }).join('');
+  document.querySelectorAll('.navlink').forEach(b=> b.onclick = async ()=>{ currentTab=b.dataset.tab; await refreshCache(); render(); });
+}
+document.getElementById('logout-btn').onclick = async () => {
+  try { await api('/api/auth/logout', { method:'POST', body:{ employeeId: session.employeeId, branchId: session.branchId } }); } catch(e){}
+  session = null; posCart = []; localStorage.removeItem('ebp_session');
+  document.getElementById('app').classList.remove('show');
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('login-workid').value=''; document.getElementById('login-name').value=''; document.getElementById('login-err').textContent='';
+};
+function render(){
+  renderNav();
+  document.querySelectorAll('.navlink').forEach(b=> b.classList.toggle('active', b.dataset.tab===currentTab));
+  const main = document.getElementById('main');
+  if(currentTab==='dashboard') { main.innerHTML = renderDashboard(); bindDashboard(); }
+  else if(currentTab==='pos') { main.innerHTML = renderPOS(); bindPOS(); }
+  else if(currentTab==='inventory') { main.innerHTML = renderInventory(); bindInventory(); }
+  else if(currentTab==='returns') { main.innerHTML = renderReturns(); bindReturns(); }
+  else if(currentTab==='reports') { main.innerHTML = renderReports(); bindReports(); }
+  else if(currentTab==='confirm') { main.innerHTML = renderConfirm(); bindConfirm(); }
+  else if(currentTab==='employees') { main.innerHTML = renderEmployees(); bindEmployees(); }
+  else if(currentTab==='branches') { main.innerHTML = renderBranches(); bindBranches(); }
+  else if(currentTab==='audit') main.innerHTML = renderAudit();
+}
+
+/* ---------------- DASHBOARD ---------------- */
+function renderDashboard(){
+  const bId = session.branchId;
+  const stock = CACHE.stock || {};
+  let stockValue = 0, lowCount = 0;
+  CACHE.products.forEach(p=>{ if(p.isService) return; const q=stock[p.id]||0; stockValue += q*p.cost; if(q<=p.reorderLevel) lowCount++; });
+  const pending = pendingCount();
+  const recentAudit = CACHE.audit.slice(0,8);
+  const lowItems = CACHE.products.filter(p=> !p.isService && (stock[p.id]||0) <= p.reorderLevel);
+  const physicalProducts = CACHE.products.filter(p=>!p.isService).sort((a,b)=> (stock[b.id]||0)*b.cost - (stock[a.id]||0)*a.cost);
+  const fx = CACHE.settings || {fxCurrency:'ZiG', fxRate:0};
+  return `
+  <div class="topbar"><h1>Dashboard</h1><span class="branchtag">${branchName(bId)}</span></div>
+  <div class="cards">
+    <div class="card"><div class="label">Stock Value (cost)</div><div class="val">${money(stockValue)}</div></div>
+    <div class="card ${lowCount?'bad':''}"><div class="label">Low Stock Items</div><div class="val">${lowCount}</div></div>
+    <div class="card ${pending?'bad':''}"><div class="label">Pending Stock Confirmations</div><div class="val">${pending}</div></div>
+  </div>
+  <div class="pos-wrap" style="grid-template-columns:1.3fr 1fr;">
+    <div class="panel"><h3>Recent Accountability Log</h3>
+      <table><thead><tr><th>Time</th><th>Employee</th><th>Action</th><th>Details</th></tr></thead>
+      <tbody>${recentAudit.map(a=>`<tr><td>${fmtDT(a.timestamp)}</td><td>${empName(a.employeeId)}</td><td>${a.action}</td><td>${a.details}</td></tr>`).join('') || '<tr><td colspan="4" class="empty-state">No activity yet.</td></tr>'}</tbody></table>
+    </div>
+    <div class="panel"><h3>Reorder List — ${branchName(bId)}</h3>
+      <table><thead><tr><th>Item</th><th>Qty</th><th>Reorder At</th></tr></thead>
+      <tbody>${lowItems.map(p=>`<tr><td>${p.name}</td><td>${stock[p.id]||0} ${p.unit}</td><td>${p.reorderLevel} ${p.unit}</td></tr>`).join('') || '<tr><td colspan="3" class="empty-state">All stocked up.</td></tr>'}</tbody></table>
+    </div>
+  </div>
+  <div class="panel"><h3>Stock Value &amp; Units — Every Product</h3>
+    <table><thead><tr><th>Product</th><th>Category</th><th>Units in Stock</th><th>Value (cost)</th></tr></thead>
+    <tbody>${physicalProducts.map(p=>{ const q = stock[p.id]||0; return `<tr><td>${p.name}</td><td><span class="tag cat">${p.category}</span></td><td>${q} ${p.unit}</td><td>${money(q*p.cost)}</td></tr>`; }).join('') || '<tr><td colspan="4" class="empty-state">No products yet.</td></tr>'}</tbody></table>
+  </div>
+  ${session.isAdmin ? `<div class="panel" id="fx-panel"><h3>Foreign Currency Settings</h3>
+    <p style="color:var(--steel);font-size:13px;margin-top:-8px;">Set the local currency and its rate against USD, so cashiers can take payment in ${fx.fxCurrency||'a local currency'} at the till.</p>
+    <div class="row2"><div class="field"><label>Currency Name</label><input id="fx-currency" value="${fx.fxCurrency||''}"></div>
+    <div class="field"><label>Rate (units per 1 USD)</label><input id="fx-rate" type="number" step="0.01" value="${fx.fxRate||0}"></div></div>
+    <button class="btn btn-yellow" id="fx-save">Save Currency Settings</button>
+  </div>` : ''}`;
+}
+function bindDashboard(){
+  const btn = document.getElementById('fx-save'); if (!btn) return;
+  btn.onclick = async ()=>{
+    const fxCurrency = document.getElementById('fx-currency').value.trim() || 'ZiG';
+    const fxRate = Number(document.getElementById('fx-rate').value) || 0;
+    try { await api('/api/settings', { method:'PUT', body:{ fxCurrency, fxRate, actorId: session.employeeId } }); await refreshCache(); render(); toast('Currency settings saved.'); } catch(e){}
+  };
+}
+
+/* ---------------- POS ---------------- */
+let freebieMode = false;
+function renderPOS(){
+  const cats = (CACHE.categories||[]).map(c=>c.name);
+  const subcats = posCategory!=='All' ? CACHE.products.filter(p=>p.category===posCategory && p.subcategory).map(p=>p.subcategory) : [];
+  const uniqueSubcats = [...new Set(subcats)];
+  const fx = CACHE.settings || {fxCurrency:'ZiG', fxRate:0};
+  return `
+  <div class="topbar"><h1>Sales Till</h1><span class="branchtag">${branchName(session.branchId)}</span></div>
+  <div class="pos-wrap">
+    <div>
+      <div class="pos-search">
+        <input id="pos-search-input" class="search-input" placeholder="Search product or SKU…">
+        <div class="catchip ${posCategory==='All'?'active':''}" data-cat="All">All</div>
+        ${cats.map(c=>`<div class="catchip ${posCategory===c?'active':''}" data-cat="${c}">${c}</div>`).join('')}
+      </div>
+      ${uniqueSubcats.length ? `<div class="pos-search" style="margin-top:-6px;">
+        <div class="catchip ${posSubcategory==='All'?'active':''}" data-subcat="All" style="font-size:10.5px;padding:4px 10px;">All ${posCategory}</div>
+        ${uniqueSubcats.map(s=>`<div class="catchip ${posSubcategory===s?'active':''}" data-subcat="${s}" style="font-size:10.5px;padding:4px 10px;">${s}</div>`).join('')}
+      </div>` : ''}
+      <div class="prod-grid" id="prod-grid"></div>
+    </div>
+    <div class="cart">
+      <h3>Current Sale</h3>
+      <div id="cart-items"></div>
+      <button class="btn btn-outline" id="add-freebie-btn" style="width:100%;margin-top:8px;">${freebieMode ? '★ Tap a product to give it free…' : '+ Add Freebie'}</button>
+      <div class="field" style="margin-top:12px;"><label>Discount ($)</label><input id="pos-discount" type="number" min="0" step="0.01" value="${checkoutState.discount||''}" placeholder="0.00"></div>
+      <div class="cart-subline"><span>Subtotal</span><span id="cart-subtotal-val"></span></div>
+      <div class="cart-subline"><span>Discount</span><span id="cart-discount-val"></span></div>
+      <div class="cart-total"><span>Total</span><span id="cart-total-val">${money(0)}</span></div>
+      <div class="field" style="margin-top:10px;"><label>Payment Method</label>
+        <div class="pay-toggle">
+          <button data-pay="Cash" class="${checkoutState.paymentMethod==='Cash'?'active':''}">Cash</button>
+          <button data-pay="EcoCash" class="${checkoutState.paymentMethod==='EcoCash'?'active':''}">EcoCash</button>
+        </div>
+      </div>
+      ${checkoutState.paymentMethod==='Cash' ? `
+      <div class="field"><label>Amount Received</label>
+        <div style="display:flex;gap:6px;">
+          <select id="pos-currency" style="width:92px;">
+            <option value="USD" ${checkoutState.currency==='USD'?'selected':''}>USD</option>
+            ${fx.fxRate>0?`<option value="LOCAL" ${checkoutState.currency==='LOCAL'?'selected':''}>${fx.fxCurrency}</option>`:''}
+          </select>
+          <input id="pos-received" type="number" step="0.01" value="${checkoutState.amountReceived!=null?checkoutState.amountReceived:''}" placeholder="0.00" style="flex:1;">
+        </div>
+        <div class="note-btns" id="note-btns"></div>
+      </div>
+      <div class="cart-subline" style="font-size:14.5px;padding-top:6px;"><span>Change Due</span><span id="cart-change-val" style="font-weight:700;color:var(--gold-money);">—</span></div>
+      ` : ''}
+      <button class="btn btn-money" id="checkout-btn" style="width:100%;margin-top:12px;">Checkout &amp; Print Receipt</button>
+      <button class="btn btn-outline" id="clear-cart-btn" style="width:100%;margin-top:8px;">Clear Sale</button>
+    </div>
+  </div>`;
+}
+function posFilteredProducts(){
+  const q = (document.getElementById('pos-search-input')?.value || '').toLowerCase();
+  return CACHE.products.filter(p=>{
+    if (freebieMode) { if (!p.isFreebieOnly) return false; }
+    else { if (p.isFreebieOnly) return false; }
+    if(posCategory!=='All' && p.category!==posCategory) return false;
+    if(posCategory!=='All' && posSubcategory!=='All' && p.subcategory!==posSubcategory) return false;
+    if(q && !(p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q))) return false;
+    return true;
+  });
+}
+function renderProdGrid(){
+  const stock = CACHE.stock || {};
+  const grid = document.getElementById('prod-grid'); if(!grid) return;
+  const items = posFilteredProducts();
+  grid.innerHTML = items.map(p=>{
+    const q = stock[p.id]||0;
+    const noStock = !p.isService && q<=0;
+    const stockLine = p.isService
+      ? `<span style="color:var(--gold-money);">Service</span>`
+      : `<span style="color:${q<=p.reorderLevel?'var(--bad)':'var(--steel)'}">${q} left</span>`;
+    return `<div class="prod-card ${noStock?'nostock':''}" data-id="${p.id}">
+      <div class="pname">${p.name}</div>
+      <div class="pprice">${money(p.price)}</div>
+      <div class="pstock">${stockLine}</div>
+    </div>`;
+  }).join('') || `<div class="empty-state">${freebieMode ? 'No freebie items yet — mark one as a freebie in Inventory first.' : 'No products match.'}</div>`;
+  grid.querySelectorAll('.prod-card').forEach(el=> el.onclick = ()=>{ if(!el.classList.contains('nostock')) addToCart(el.dataset.id); });
+}
+function addToCart(prodId){
+  const stock = CACHE.stock || {};
+  const p = CACHE.products.find(x=>x.id===prodId);
+  if (freebieMode || p.isFreebieOnly) {
+    const existing = posCart.find(c=>c.productId===prodId && c.isFreebie);
+    if (existing) existing.qty += 1; else posCart.push({productId:prodId, qty:1, price:p.price, isFreebie:true});
+    toast(`${p.name} added as a freebie.`);
+    renderCart();
+    return;
+  }
+  const existing = posCart.find(c=>c.productId===prodId && !c.isFreebie);
+  const inCart = existing ? existing.qty : 0;
+  if (!p.isService && inCart + 1 > (stock[prodId]||0)) return;
+  if (existing) existing.qty += 1; else posCart.push({productId:prodId, qty:1, price:p.price, isFreebie:false});
+  renderCart();
+}
+function cartMath(){
+  const subtotal = posCart.reduce((a,c)=> a + (c.isFreebie ? 0 : c.price*c.qty), 0);
+  const discount = Math.min(subtotal, checkoutState.discount||0);
+  const total = Math.max(0, subtotal - discount);
+  let changeDue = null;
+  if (checkoutState.paymentMethod==='Cash' && checkoutState.amountReceived != null) {
+    const fx = CACHE.settings || {fxRate:0};
+    const receivedUsd = (checkoutState.currency==='LOCAL' && fx.fxRate>0) ? checkoutState.amountReceived / fx.fxRate : checkoutState.amountReceived;
+    changeDue = receivedUsd - total;
+  }
+  return { subtotal, discount, total, changeDue };
+}
+function renderCart(){
+  const stock = CACHE.stock || {};
+  const box = document.getElementById('cart-items'); if(!box) return;
+  box.innerHTML = posCart.length===0 ? '<div class="cart-empty">Cart is empty — tap a product to add it.</div>' :
+    posCart.map((c,idx)=>{
+      const p = CACHE.products.find(x=>x.id===c.productId);
+      if (c.isFreebie) {
+        return `<div class="freebie-row"><span>🎁 ${p.name} × ${c.qty} <span style="color:var(--gold-money);font-weight:700;">FREE</span></span>
+          <button data-act="rm" data-idx="${idx}" style="background:var(--blush);border:none;color:var(--bad);border-radius:999px;width:20px;height:20px;cursor:pointer;">×</button></div>`;
+      }
+      return `<div class="cart-item"><div class="ci-name">${p.name}<br><span style="color:var(--steel)">${money(c.price)} × ${c.qty} ${p.unit}</span></div>
+        <div class="ci-qty"><button data-act="dec" data-idx="${idx}">−</button><span>${c.qty}</span><button data-act="inc" data-idx="${idx}">+</button><button data-act="rm" data-idx="${idx}" style="background:#fdeeea;color:var(--bad);">×</button></div></div>`;
+    }).join('');
+  const { subtotal, discount, total, changeDue } = cartMath();
+  document.getElementById('cart-subtotal-val').textContent = money(subtotal);
+  document.getElementById('cart-discount-val').textContent = discount ? '−' + money(discount) : money(0);
+  document.getElementById('cart-total-val').textContent = money(total);
+  const changeEl = document.getElementById('cart-change-val');
+  if (changeEl) changeEl.textContent = changeDue==null ? '—' : (changeDue<0 ? 'Short ' + money(-changeDue) : money(changeDue));
+  if (changeEl) changeEl.style.color = (changeDue!=null && changeDue<0) ? 'var(--bad)' : 'var(--gold-money)';
+  box.querySelectorAll('button').forEach(btn=> btn.onclick = ()=>{
+    const idx = Number(btn.dataset.idx), act = btn.dataset.act, item = posCart[idx];
+    const p = CACHE.products.find(x=>x.id===item.productId);
+    if(act==='inc'){ if(p.isService || item.isFreebie || item.qty+1 <= (stock[item.productId]||0)) item.qty+=1; }
+    else if(act==='dec'){ item.qty-=1; if(item.qty<=0) posCart.splice(idx,1); }
+    else if(act==='rm'){ posCart.splice(idx,1); }
+    renderCart(); renderProdGrid();
+  });
+}
+function bindPOS(){
+  renderProdGrid(); renderCart();
+  document.getElementById('pos-search-input').oninput = renderProdGrid;
+  document.querySelectorAll('[data-cat]').forEach(c=> c.onclick = ()=>{ posCategory=c.dataset.cat; posSubcategory='All'; document.getElementById('main').innerHTML = renderPOS(); bindPOS(); });
+  document.querySelectorAll('[data-subcat]').forEach(c=> c.onclick = ()=>{ posSubcategory=c.dataset.subcat; document.getElementById('main').innerHTML = renderPOS(); bindPOS(); });
+  document.getElementById('clear-cart-btn').onclick = ()=>{ posCart=[]; checkoutState = { discount:0, paymentMethod:'Cash', amountReceived:null, currency:'USD' }; posSubcategory='All'; document.getElementById('main').innerHTML = renderPOS(); bindPOS(); };
+  document.getElementById('checkout-btn').onclick = doCheckout;
+  document.getElementById('add-freebie-btn').onclick = ()=>{
+    freebieMode = !freebieMode;
+    const btn = document.getElementById('add-freebie-btn');
+    btn.textContent = freebieMode ? '★ Tap an item below to give it free' : '+ Add Freebie';
+    btn.style.background = freebieMode ? 'var(--gold)' : '';
+    btn.style.color = freebieMode ? '#fff' : '';
+    posCategory = 'All'; posSubcategory = 'All';
+    document.getElementById('main').innerHTML = renderPOS(); bindPOS();
+  };
+  const discInput = document.getElementById('pos-discount');
+  discInput.oninput = ()=>{ checkoutState.discount = Number(discInput.value)||0; renderCart(); };
+  document.querySelectorAll('[data-pay]').forEach(b=> b.onclick = ()=>{ checkoutState.paymentMethod = b.dataset.pay; document.getElementById('main').innerHTML = renderPOS(); bindPOS(); });
+  const recvInput = document.getElementById('pos-received');
+  if (recvInput) {
+    recvInput.oninput = ()=>{ checkoutState.amountReceived = recvInput.value===''?null:Number(recvInput.value); renderCart(); };
+    const curSelect = document.getElementById('pos-currency');
+    curSelect.onchange = ()=>{ checkoutState.currency = curSelect.value; checkoutState.amountReceived = null; recvInput.value=''; renderNoteBtns(); renderCart(); };
+    renderNoteBtns();
+  }
+}
+function renderNoteBtns(){
+  const wrap = document.getElementById('note-btns'); if (!wrap) return;
+  if (checkoutState.currency !== 'USD') { wrap.innerHTML = ''; return; }
+  wrap.innerHTML = NOTE_SIZES.map(n=>`<button data-note="${n}">$${n}</button>`).join('') + `<button data-note="clear" style="color:var(--bad);">Clear</button>`;
+  wrap.querySelectorAll('button').forEach(b=> b.onclick = ()=>{
+    if (b.dataset.note==='clear') { checkoutState.amountReceived = 0; }
+    else { checkoutState.amountReceived = (checkoutState.amountReceived||0) + Number(b.dataset.note); }
+    document.getElementById('pos-received').value = checkoutState.amountReceived;
+    renderCart();
+  });
+}
+async function doCheckout(){
+  if (posCart.length===0) return;
+  const { discount, total, changeDue } = cartMath();
+  if (checkoutState.paymentMethod==='Cash' && checkoutState.amountReceived!=null && changeDue!=null && changeDue<0) {
+    toast('Amount received is less than the total — check the amount before checking out.'); return;
+  }
+  const items = posCart.map(c=>({productId:c.productId, qty:c.qty, price:c.price, isFreebie:!!c.isFreebie}));
+  const saleBody = { branchId: session.branchId, employeeId: session.employeeId, items, discount,
+    paymentMethod: checkoutState.paymentMethod, amountReceived: checkoutState.amountReceived, currency: checkoutState.currency };
+  if (!navigator.onLine) { queueOfflineSale(items, saleBody); return; }
+  try {
+    const sale = await api('/api/sales', { method:'POST', body: saleBody });
+    posCart = []; checkoutState = { discount:0, paymentMethod:'Cash', amountReceived:null, currency:'USD' };
+    await refreshCache(); showReceipt(sale); document.getElementById('main').innerHTML = renderPOS(); bindPOS(); renderNav();
+  } catch(e){
+    if (e instanceof TypeError) queueOfflineSale(items, saleBody); // network unreachable, not a server-side rejection
+  }
+}
+function showReceipt(sale, offline){
+  const items = sale.items.map(c=>{ const p = CACHE.products.find(x=>x.id===c.productId); const label = c.isFreebie ? 'FREE' : money(c.price*c.qty);
+    return `<div class="rline"><span>${p?p.name:c.productId} x${c.qty}${p?p.unit:''}${c.isFreebie?' 🎁':''}</span><span>${label}</span></div>`; }).join('');
+  const fx = CACHE.settings || {fxCurrency:'ZiG', fxRate:0};
+  openModal(`<div class="receipt"><div class="rhead"><div class="rb">ESTHERS BEAUTY PARLOUR</div><div>${branchName(session.branchId)}</div></div>
+      <div class="rseq">${sale.seq}</div>
+      ${offline?'<div style="text-align:center;color:var(--bad);font-weight:700;margin:6px 0 2px;letter-spacing:.04em;">OFFLINE — PENDING SYNC</div>':''}
+      <div class="rline"><span>Date</span><span>${fmtDT(sale.timestamp)}</span></div>
+      <div class="rline"><span>Served by</span><span>${session.name}</span></div><hr>${items}<hr>
+      ${sale.discount ? `<div class="rline"><span>Subtotal</span><span>${money(sale.subtotal!=null?sale.subtotal:(sale.total+sale.discount))}</span></div><div class="rline"><span>Discount</span><span>−${money(sale.discount)}</span></div>` : ''}
+      <div class="rline" style="font-weight:700;font-size:14px;color:var(--gold-money);"><span>TOTAL</span><span>${money(sale.total)}</span></div>
+      ${fx.fxRate>0 ? `<div class="rline" style="color:var(--steel);font-size:11px;"><span>≈ ${fx.fxCurrency}</span><span>${(sale.total*fx.fxRate).toFixed(2)}</span></div>` : ''}
+      <div class="rline"><span>Payment</span><span>${sale.paymentMethod||'Cash'}</span></div>
+      ${sale.paymentMethod==='Cash' && sale.amountReceived!=null ? `<div class="rline"><span>Received</span><span>${sale.currency==='LOCAL'?fx.fxCurrency+' ':''}${Number(sale.amountReceived).toFixed(2)}</span></div>
+      <div class="rline"><span>Change</span><span>${money(sale.changeDue||0)}</span></div>` : ''}
+      <hr><div style="text-align:center;color:var(--steel);margin-top:6px;">${offline?'Saved on this device — will sync automatically once online.':'Thank you for shopping with us'}</div></div>
+    <div class="modal-actions"><button class="btn btn-outline" id="close-receipt">Close</button><button class="btn btn-yellow" onclick="window.print()">Print</button></div>`);
+  document.getElementById('close-receipt').onclick = closeModal;
+}
+
+/* ---------------- INVENTORY ---------------- */
+let invSearch = "";
+function renderInventory(){
+  const stock = CACHE.stock || {};
+  const list = CACHE.products.filter(p=> !invSearch || p.name.toLowerCase().includes(invSearch) || p.sku.toLowerCase().includes(invSearch));
+  return `
+  <div class="topbar"><h1>Inventory</h1><span class="branchtag">${branchName(session.branchId)}</span></div>
+  <div class="toolbar"><input id="inv-search" class="search-input" placeholder="Search product or SKU…" value="${invSearch}"><button class="btn btn-yellow" id="add-product-btn">+ Add Product</button></div>
+  <div class="panel"><table><thead><tr><th>SKU</th><th>Product</th><th>Category</th><th>Attributes</th><th>Stock</th><th>Price</th><th>Cost</th><th></th></tr></thead>
+    <tbody>${list.map(p=>{
+      const q = stock[p.id]||0, low = !p.isService && q<=p.reorderLevel;
+      const stockCell = p.isService
+        ? `<span class="tag cat">Service</span>`
+        : `${q} ${p.unit} ${low?'<span class="tag low">Low</span>':'<span class="tag ok">OK</span>'}`;
+      const attrs = [p.color, p.density, p.length].filter(Boolean).join(' · ') || '—';
+      return `<tr><td class="mono">${p.sku}</td><td>${p.name}</td><td><span class="tag cat">${p.category}</span>${p.subcategory?` <span class="tag cat" style="background:var(--blush-deep);">${p.subcategory}</span>`:''}</td>
+        <td style="color:var(--steel);font-size:12px;">${attrs}</td>
+        <td>${stockCell}</td>
+        <td>${money(p.price)} /${p.unit}</td><td>${p.isService?'—':money(p.cost)+' /'+p.unit}</td>
+        <td style="white-space:nowrap;">${p.isService?'':`<button class="btn btn-outline" style="padding:5px 9px;font-size:11px;" data-adj="${p.id}">Add / Remove Stock</button>`}
+        <button class="btn btn-outline" style="padding:5px 9px;font-size:11px;" data-edit="${p.id}">Edit</button></td></tr>`;
+    }).join('') || '<tr><td colspan="8" class="empty-state">No products found.</td></tr>'}</tbody></table></div>`;
+}
+function bindInventory(){
+  document.getElementById('inv-search').oninput = (e)=>{ invSearch = e.target.value.toLowerCase(); document.getElementById('main').innerHTML = renderInventory(); bindInventory(); };
+  document.getElementById('add-product-btn').onclick = ()=> openProductModal(null);
+  document.querySelectorAll('[data-edit]').forEach(b=> b.onclick = ()=> openProductModal(b.dataset.edit));
+  document.querySelectorAll('[data-adj]').forEach(b=> b.onclick = ()=> openStockAdjustModal(b.dataset.adj));
+}
+function openProductModal(prodId){
+  const p = prodId ? CACHE.products.find(x=>x.id===prodId) : null;
+  const isSvc = p ? !!p.isService : false;
+  const isFreebieOnly = p ? !!p.isFreebieOnly : false;
+  openModal(`<h3>${p?'Edit Product':'Add Product / Service'}</h3>
+    <div class="field"><label><input type="checkbox" id="pf-isservice" ${isSvc?'checked':''} style="width:auto;margin-right:6px;">This is a service (no stock tracking, e.g. installation, revamp, customisation)</label></div>
+    <div class="field" id="pf-freebie-field"><label><input type="checkbox" id="pf-isfreebie" ${isFreebieOnly?'checked':''} style="width:auto;margin-right:6px;">This is a freebie giveaway item — never sold, only given free with a sale</label></div>
+    <div class="field"><label>Product / Service Name</label><input id="pf-name" value="${p?p.name:''}"></div>
+    <div class="row2"><div class="field"><label>SKU</label><input id="pf-sku" value="${p?p.sku:''}"></div>
+      <div class="field"><label>Category</label><input id="pf-cat" value="${p?p.category:''}" placeholder="Type a category name"></div></div>
+    <div class="field"><label>Subcategory (optional)</label><input id="pf-subcat" value="${p&&p.subcategory?p.subcategory:''}" placeholder="e.g. Vietnamese, Brazilian"></div>
+    <div class="row2"><div class="field"><label>Unit</label><select id="pf-unit">${UNITS.map(u=>`<option value="${u}" ${p&&p.unit===u?'selected':''}>${u}</option>`).join('')}</select></div>
+      <div class="field" id="pf-reorder-wrap"><label>Reorder Level</label><input id="pf-reorder" type="number" value="${p?p.reorderLevel:5}"></div></div>
+    <div class="row3" id="pf-attrs-wrap"><div class="field"><label>Colour</label><input id="pf-color" value="${p&&p.color?p.color:''}" placeholder="e.g. Natural Black"></div>
+      <div class="field"><label>Density</label><input id="pf-density" value="${p&&p.density?p.density:''}" placeholder="e.g. 150%"></div>
+      <div class="field"><label>Length</label><input id="pf-length" value="${p&&p.length?p.length:''}" placeholder="e.g. 20 inch"></div></div>
+    <div class="row2"><div class="field"><label>Sell Price (per unit)</label><input id="pf-price" type="number" step="0.01" value="${p?p.price:''}"></div>
+      <div class="field" id="pf-cost-wrap"><label>Cost Price (per unit)</label><input id="pf-cost" type="number" step="0.01" value="${p?p.cost:''}"></div></div>
+    ${!p?`<div class="field" id="pf-openstock-wrap"><label>Opening Stock — ${branchName(session.branchId)}</label><input id="pf-openstock" type="number" value="0"></div>`:''}
+    <div class="modal-actions">${p?`<button class="btn btn-danger" id="pf-delete">Delete</button>`:'<span></span>'}
+      <div><button class="btn btn-outline" id="pf-cancel">Cancel</button><button class="btn btn-yellow" id="pf-save">Save</button></div></div>`);
+  const svcCheckbox = document.getElementById('pf-isservice');
+  const toggleServiceFields = ()=>{
+    const svc = svcCheckbox.checked;
+    ['pf-reorder-wrap','pf-cost-wrap','pf-openstock-wrap','pf-freebie-field'].forEach(id=>{
+      const el = document.getElementById(id); if(el) el.style.display = svc?'none':'';
+    });
+    if (svc) document.getElementById('pf-isfreebie').checked = false;
+  };
+  svcCheckbox.onchange = toggleServiceFields;
+  toggleServiceFields();
+  document.getElementById('pf-cancel').onclick = closeModal;
+  if (p) document.getElementById('pf-delete').onclick = async ()=>{
+    try { await api('/api/products/' + p.id, { method:'DELETE', body:{ actorId: session.employeeId, branchId: session.branchId } });
+      await refreshCache(); closeModal(); render(); } catch(e){}
+  };
+  document.getElementById('pf-save').onclick = async ()=>{
+    const name = document.getElementById('pf-name').value.trim();
+    const sku = document.getElementById('pf-sku').value.trim();
+    const category = document.getElementById('pf-cat').value.trim();
+    const subcategory = document.getElementById('pf-subcat').value.trim() || null;
+    if (!name || !sku || !category) return;
+    const isService = document.getElementById('pf-isservice').checked;
+    const isFreebieOnly = document.getElementById('pf-isfreebie').checked;
+    const body = { name, sku, category, subcategory, unit: document.getElementById('pf-unit').value,
+      reorderLevel: Number(document.getElementById('pf-reorder').value)||0, price: Number(document.getElementById('pf-price').value)||0,
+      cost: Number(document.getElementById('pf-cost').value)||0, isService, isFreebieOnly,
+      color: document.getElementById('pf-color').value.trim() || null, density: document.getElementById('pf-density').value.trim() || null, length: document.getElementById('pf-length').value.trim() || null,
+      actorId: session.employeeId, branchId: session.branchId };
+    try {
+      if (p) await api('/api/products/' + p.id, { method:'PUT', body });
+      else await api('/api/products', { method:'POST', body: Object.assign(body, { openingStock: Number(document.getElementById('pf-openstock').value)||0 }) });
+      await refreshCache(); closeModal(); render();
+    } catch(e){}
+  };
+}
+function openStockAdjustModal(prodId){
+  const p = CACHE.products.find(x=>x.id===prodId);
+  const cur = (CACHE.stock||{})[prodId]||0;
+  openModal(`<h3>Submit Stock Entry</h3>
+    <p style="color:#5B6068;font-size:13px;">${p.name} — currently <b>${cur} ${p.unit}</b> at ${branchName(session.branchId)}. This will be held as <b>pending</b> until another employee confirms it.</p>
+    <div class="field"><label>Type</label><select id="adj-type"><option value="add">Add stock (delivery)</option><option value="remove">Remove stock (damage/loss/count)</option></select></div>
+    <div class="field"><label>Quantity (${p.unit})</label><input id="adj-qty" type="number" min="0.01" step="0.01" value="1"></div>
+    <div class="field"><label>Reason / Reference</label><input id="adj-reason" placeholder="e.g. GRN #245, damaged in transit, stock count"></div>
+    <div class="modal-actions"><button class="btn btn-outline" id="adj-cancel">Cancel</button><button class="btn btn-yellow" id="adj-save">Submit for Confirmation</button></div>`);
+  document.getElementById('adj-cancel').onclick = closeModal;
+  document.getElementById('adj-save').onclick = async ()=>{
+    const type = document.getElementById('adj-type').value;
+    const qty = Number(document.getElementById('adj-qty').value)||0;
+    const reason = document.getElementById('adj-reason').value.trim() || '—';
+    if (qty<=0) return;
+    try {
+      await api('/api/stock-requests', { method:'POST', body:{ branchId: session.branchId, productId: prodId, qty, type, reason, actorId: session.employeeId } });
+      await refreshCache(); closeModal(); render();
+    } catch(e){}
+  };
+}
+
+/* ---------------- RETURNS ---------------- */
+function renderReturns(){
+  const physical = CACHE.products.filter(p=>!p.isService);
+  const rows = CACHE.returns || [];
+  return `<div class="topbar"><h1>Returned Stock</h1><span class="branchtag">${branchName(session.branchId)}</span></div>
+  <div class="panel"><h3>Log a Return</h3>
+    <div class="row2"><div class="field"><label>Product</label><select id="ret-product">${physical.map(p=>`<option value="${p.id}">${p.name} (${p.sku})</option>`).join('')}</select></div>
+      <div class="field"><label>Quantity</label><input id="ret-qty" type="number" min="0.01" step="0.01" value="1"></div></div>
+    <div class="row2"><div class="field"><label>Reason</label><input id="ret-reason" placeholder="e.g. Wrong size, customer changed mind, defective"></div>
+      <div class="field"><label>Refund Amount ($, optional)</label><input id="ret-refund" type="number" min="0" step="0.01" placeholder="0.00"></div></div>
+    <button class="btn btn-yellow" id="ret-save">Log Return &amp; Restock</button>
+  </div>
+  <div class="panel"><h3>Recent Returns</h3>
+    <table><thead><tr><th>Time</th><th>Product</th><th>Qty</th><th>Reason</th><th>Refund</th><th>By</th></tr></thead>
+    <tbody>${rows.map(r=>{ const p = CACHE.products.find(x=>x.id===r.productId); return `<tr><td>${fmtDT(r.timestamp)}</td><td>${p?p.name:r.productId}</td><td>${r.qty} ${p?p.unit:''}</td><td>${r.reason}</td><td>${r.refundAmount?money(r.refundAmount):'—'}</td><td>${empName(r.employeeId)}</td></tr>`; }).join('') || '<tr><td colspan="6" class="empty-state">No returns logged yet.</td></tr>'}</tbody></table>
+  </div>`;
+}
+function bindReturns(){
+  const btn = document.getElementById('ret-save'); if (!btn) return;
+  btn.onclick = async ()=>{
+    const productId = document.getElementById('ret-product').value;
+    const qty = Number(document.getElementById('ret-qty').value)||0;
+    const reason = document.getElementById('ret-reason').value.trim() || '—';
+    const refundAmount = Number(document.getElementById('ret-refund').value)||0;
+    if (!productId || qty<=0) return;
+    try {
+      await api('/api/returns', { method:'POST', body:{ branchId: session.branchId, productId, qty, reason, refundAmount, actorId: session.employeeId } });
+      await refreshCache(); render(); toast('Return logged and stock updated.');
+    } catch(e){}
+  };
+}
+
+/* ---------------- REPORTS ---------------- */
+let reportPeriod = 'weekly';
+function renderReports(){
+  return `<div class="topbar"><h1>Sales Reports</h1><span class="branchtag">${branchName(session.branchId)}</span></div>
+  <div class="pos-search" style="margin-bottom:16px;">
+    <div class="catchip ${reportPeriod==='weekly'?'active':''}" data-period="weekly">Weekly</div>
+    <div class="catchip ${reportPeriod==='monthly'?'active':''}" data-period="monthly">Monthly</div>
+    <div class="catchip ${reportPeriod==='yearly'?'active':''}" data-period="yearly">Yearly</div>
+  </div>
+  <div class="panel"><h3>Sales — ${reportPeriod.charAt(0).toUpperCase()+reportPeriod.slice(1)}</h3>
+    <canvas id="report-chart" height="90"></canvas>
+  </div>
+  <div class="panel" id="report-table-wrap"><h3>Totals by Period</h3><div id="report-table"></div></div>`;
+}
+async function bindReports(){
+  document.querySelectorAll('[data-period]').forEach(c=> c.onclick = ()=>{ reportPeriod = c.dataset.period; document.getElementById('main').innerHTML = renderReports(); bindReports(); });
+  let rows = [];
+  try {
+    rows = await api('/api/reports/sales?' + (session.isAdmin ? 'all=1' : ('branchId=' + encodeURIComponent(session.branchId))) + '&period=' + reportPeriod);
+  } catch(e){ rows = []; }
+  const labels = rows.map(r=>r.label);
+  const totals = rows.map(r=>r.total||0);
+  document.getElementById('report-table').innerHTML = rows.length ? `<table><thead><tr><th>Period</th><th>Sales</th><th>Total</th></tr></thead>
+    <tbody>${rows.map(r=>`<tr><td>${r.label}</td><td>${r.count}</td><td>${money(r.total)}</td></tr>`).join('')}</tbody></table>`
+    : '<p class="empty-state">No sales recorded in this period yet.</p>';
+  const canvas = document.getElementById('report-chart');
+  if (!canvas || typeof Chart === 'undefined') return;
+  if (window._reportChartInstance) window._reportChartInstance.destroy();
+  window._reportChartInstance = new Chart(canvas.getContext('2d'), {
+    type: 'bar',
+    data: { labels, datasets: [{ label: 'Sales ($)', data: totals, backgroundColor: '#B8924A', borderRadius: 6, maxBarThickness: 42 }] },
+    options: { responsive:true, plugins:{ legend:{ display:false } }, scales:{ y:{ beginAtZero:true, ticks:{ callback:(v)=>'$'+v } } } }
+  });
+}
+
+/* ---------------- STOCK CONFIRMATIONS ---------------- */
+function renderConfirm(){
+  const list = CACHE.stockRequests;
+  return `<div class="topbar"><h1>Stock Confirmations</h1><span class="branchtag">${branchName(session.branchId)}</span></div>
+  <p style="color:var(--steel);font-size:13px;margin-top:-10px;">Any employee can submit a stock entry from Inventory. To keep everyone accountable, a <b>different</b> employee must confirm it before stock updates.</p>
+  <div class="panel"><table><thead><tr><th>Submitted</th><th>Product</th><th>Type</th><th>Qty</th><th>Reason</th><th>Requested By</th><th>Status</th><th></th></tr></thead>
+    <tbody>${list.map(r=>{
+      const p = CACHE.products.find(x=>x.id===r.productId);
+      const mine = r.requestedBy === session.employeeId;
+      let actions = '';
+      if (r.status==='pending') {
+        actions = mine
+          ? `<span style="color:#8b8f96;font-size:12px;">Awaiting another employee</span> <button class="btn btn-outline" style="padding:4px 8px;font-size:11px;" data-void="${r.id}">Cancel</button>`
+          : `<button class="btn btn-yellow" style="padding:4px 8px;font-size:11px;" data-confirm="${r.id}">Confirm</button> <button class="btn btn-danger" style="padding:4px 8px;font-size:11px;" data-reject="${r.id}">Reject</button>`;
+      }
+      return `<tr><td>${fmtDT(r.requestedAt)}</td><td>${p?p.name:'—'} <span style="color:#8b8f96;">(${branchName(r.branchId)})</span></td>
+        <td style="text-transform:capitalize;">${r.type}</td><td>${r.qty} ${p?p.unit:''}</td><td>${r.reason}</td><td>${empName(r.requestedBy)}</td>
+        <td><span class="tag ${r.status}">${r.status}</span>${r.confirmedBy?` <div style="font-size:11px;color:#8b8f96;">by ${empName(r.confirmedBy)}</div>`:''}</td><td>${actions}</td></tr>`;
+    }).join('') || '<tr><td colspan="8" class="empty-state">No stock entries yet.</td></tr>'}</tbody></table></div>`;
+}
+function bindConfirm(){
+  document.querySelectorAll('[data-confirm]').forEach(b=> b.onclick = ()=> resolveStockRequest(b.dataset.confirm, 'confirm'));
+  document.querySelectorAll('[data-reject]').forEach(b=> b.onclick = ()=> resolveStockRequest(b.dataset.reject, 'reject'));
+  document.querySelectorAll('[data-void]').forEach(b=> b.onclick = ()=> resolveStockRequest(b.dataset.void, 'reject'));
+}
+async function resolveStockRequest(reqId, action){
+  try { await api(`/api/stock-requests/${reqId}/${action}`, { method:'POST', body:{ actorId: session.employeeId } }); await refreshCache(); render(); } catch(e){}
+}
+
+/* ---------------- EMPLOYEES ---------------- */
+function renderEmployees(){
+  const canManage = session.role === 'Administrator' || session.role === 'Manager';
+  const visible = session.isAdmin ? CACHE.employees : CACHE.employees.filter(e=> e.branchId===session.branchId || e.branchId==='ALL');
+  return `<div class="topbar"><h1>Employees</h1>${canManage?'<button class="btn btn-yellow" id="add-emp-btn">+ Add Employee</button>':''}</div>
+  <div class="panel"><table><thead><tr><th>Work ID</th><th>Name</th><th>Role</th><th>Branch</th>${canManage?'<th></th>':''}</tr></thead>
+    <tbody>${visible.map(e=>`<tr><td class="mono">${e.workId}</td><td>${e.name}</td><td><span class="badge-role">${e.role}</span></td><td>${branchName(e.branchId)}</td>
+      ${canManage?`<td>${(e.id!==session.employeeId && e.role!=='Administrator')?`<button class="btn btn-outline" style="padding:5px 9px;font-size:11px;" data-remove="${e.id}">Remove</button>`:''}</td>`:''}</tr>`).join('')}</tbody></table></div>
+  ${!canManage?'<p style="color:#5B6068;font-size:13px;">Only Administrators and Managers can add or remove employees.</p>':''}
+  ${(canManage && !session.isAdmin)?`<p style="color:#5B6068;font-size:13px;">As a Manager, new employees you add are assigned to ${branchName(session.branchId)}.</p>`:''}`;
+}
+function bindEmployees(){
+  const btn = document.getElementById('add-emp-btn');
+  if (btn) btn.onclick = openEmployeeModal;
+  document.querySelectorAll('[data-remove]').forEach(b=> b.onclick = async ()=>{
+    try { await api('/api/employees/' + b.dataset.remove, { method:'DELETE', body:{ actorId: session.employeeId } }); await refreshCache(); render(); } catch(e){}
+  });
+}
+async function openEmployeeModal(){
+  const { workId: suggested } = await api('/api/employees/next-work-id');
+  const lockBranch = !session.isAdmin;
+  openModal(`<h3>Add Employee</h3>
+    <p style="color:#5B6068;font-size:13px;">This Work ID and Name are what the employee will use to log in — share them securely.</p>
+    <div class="field"><label>Full Name</label><input id="ef-name"></div>
+    <div class="row2"><div class="field"><label>Work ID</label><input id="ef-workid" value="${suggested}"></div>
+      <div class="field"><label>Role</label><select id="ef-role"><option>Cashier</option><option>Stock Clerk</option><option>Manager</option>${session.isAdmin?'<option>Administrator</option>':''}</select></div></div>
+    <div class="field"><label>Branch</label>
+      ${lockBranch ? `<input value="${branchName(session.branchId)}" disabled><input type="hidden" id="ef-branch" value="${session.branchId}">`
+                   : `<select id="ef-branch">${CACHE.branches.map(b=>`<option value="${b.id}">${b.name}</option>`).join('')}</select>`}</div>
+    <div class="modal-actions"><button class="btn btn-outline" id="ef-cancel">Cancel</button><button class="btn btn-yellow" id="ef-save">Add Employee</button></div>`);
+  document.getElementById('ef-cancel').onclick = closeModal;
+  document.getElementById('ef-save').onclick = async ()=>{
+    const name = document.getElementById('ef-name').value.trim();
+    const workId = document.getElementById('ef-workid').value.trim();
+    const role = document.getElementById('ef-role').value;
+    const branchId = document.getElementById('ef-branch').value;
+    if (!name || !workId) return;
+    try { await api('/api/employees', { method:'POST', body:{ name, workId, role, branchId, actorId: session.employeeId } }); await refreshCache(); closeModal(); render(); } catch(e){}
+  };
+}
+
+/* ---------------- BRANCHES ---------------- */
+function renderBranches(){
+  const canManage = session.isAdmin;
+  return `<div class="topbar"><h1>Branches</h1>${canManage?'<button class="btn btn-yellow" id="add-branch-btn">+ Add Branch</button>':''}</div>
+  <div class="panel"><table><thead><tr><th>Branch</th><th>Location</th><th>Employees</th><th>Products Tracked</th></tr></thead>
+    <tbody>${CACHE.branches.map(b=>`<tr><td>${b.name}</td><td>${b.location||'—'}</td><td>${CACHE.employees.filter(e=>e.branchId===b.id).length}</td><td>${CACHE.products.length}</td></tr>`).join('')}</tbody></table></div>
+  ${!canManage?'<p style="color:#5B6068;font-size:13px;">Only the Administrator can add new branches.</p>':''}`;
+}
+function bindBranches(){
+  const btn = document.getElementById('add-branch-btn'); if (!btn) return;
+  btn.onclick = ()=>{
+    openModal(`<h3>Add Branch</h3><div class="field"><label>Branch Name</label><input id="bf-name"></div>
+      <div class="field"><label>Location</label><input id="bf-loc"></div>
+      <div class="modal-actions"><button class="btn btn-outline" id="bf-cancel">Cancel</button><button class="btn btn-yellow" id="bf-save">Add</button></div>`);
+    document.getElementById('bf-cancel').onclick = closeModal;
+    document.getElementById('bf-save').onclick = async ()=>{
+      const name = document.getElementById('bf-name').value.trim();
+      const location = document.getElementById('bf-loc').value.trim();
+      if (!name) return;
+      try { await api('/api/branches', { method:'POST', body:{ name, location, actorId: session.employeeId } }); await refreshCache(); closeModal(); render(); } catch(e){}
+    };
+  };
+}
+
+/* ---------------- AUDIT ---------------- */
+function renderAudit(){
+  return `<div class="topbar"><h1>Accountability Log</h1><span class="branchtag">${branchName(session.branchId)}</span></div>
+  <div class="panel"><table><thead><tr><th>Time</th><th>Branch</th><th>Employee</th><th>Action</th><th>Details</th></tr></thead>
+    <tbody>${CACHE.audit.map(a=>`<tr><td>${fmtDT(a.timestamp)}</td><td>${branchName(a.branchId)}</td><td>${empName(a.employeeId)}</td><td>${a.action}</td><td>${a.details}</td></tr>`).join('') || '<tr><td colspan="5" class="empty-state">No activity recorded yet.</td></tr>'}</tbody></table></div>`;
+}
+
+/* ---------------- MODAL ---------------- */
+function openModal(html){ document.getElementById('modal-body').innerHTML = html; document.getElementById('modal-bg').classList.add('show'); }
+function closeModal(){ document.getElementById('modal-bg').classList.remove('show'); }
+document.getElementById('modal-bg').addEventListener('click', (e)=>{ if(e.target.id==='modal-bg') closeModal(); });
+
+/* ---------------- INIT ---------------- */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch((err)=>console.warn('SW registration failed', err)); });
+}
+(async function init(){
+  updateConnStatus();
+  const saved = localStorage.getItem('ebp_session');
+  if (saved) {
+    try {
+      session = JSON.parse(saved);
+      await enterApp();
+      return;
+    } catch(e){ session = null; localStorage.removeItem('ebp_session'); }
+  }
+})();
+</script>
+</body>
+</html>
